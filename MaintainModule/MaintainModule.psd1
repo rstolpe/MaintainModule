@@ -45,7 +45,7 @@
     Copyright         = '(c) Robin Stolpe. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'With this module you can update your installed modules and remove the old versions'
+    Description       = 'This module let you maintain your installed modules in a easy way'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '5.1'
