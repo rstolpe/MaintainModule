@@ -12,8 +12,14 @@ You can also specify module or modules that you want to update. It's also possib
 - Import specified modules in the end of the script
 
 # Install
+Install for current user
 ```
-Install-Module -Name MaintainModule
+Install-Module -Name MaintainModule -Scope CurrentUser -Force
+```
+  
+Install for all users
+```
+Install-Module -Name MaintainModule -Scope AllUsers -Force
 ```
 
 # Help
