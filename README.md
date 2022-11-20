@@ -8,9 +8,6 @@
 - If the module are updated the script will uninstall the old version of the module.
 - If selected script will import the module in the end
 
-### Links
-- [YouTube video of the script](https://youtu.be/__xMLPhmm4Y)
-
 # Install
 ```
 Install-Module -Name MaintainModule

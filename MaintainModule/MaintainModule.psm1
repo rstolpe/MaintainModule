@@ -16,43 +16,32 @@
 Function Confirm-NeededModules {
     <#
         .SYNOPSIS
-        Module that will let you in a easy way install or upgrade needed modules and also uninstall the old version of the modules.
+        This module let you maintain your installed modules in a easy way.
 
         .DESCRIPTION
-        This function will install specified modules if they are missing or upgrade them to the latest version if the modules already are installed.
-        Option to delete all of the older versions of the modules and import the modules at the end does also exist.
+        With this module you can update all of your installed modules in a easy way. You can also choose to delete all of the old versions that are installed of your modules
+        and only keep the current version.
 
-        .PARAMETER NeededModules
-        Here you can specify what modules you want to install and upgrade
+        .PARAMETER Module
+        Specify the module or modules that you want to update.
 
-        .PARAMETER ImportModules
-        If this is used it will import all of the modules in the end of the script
+        .PARAMETER ImportModule
+        If this switch are used the module will import all the modules that are specified in the Module parameter at the end of the script
 
         .PARAMETER DeleteOldVersion
-        When this is used it will delete all of the older versions of the module after upgrading the module
-
-        .PARAMETER OnlyUpgrade
-        When this is used the script will not install any modules it will upgrade all of the already installed modules on the computer to the latest version.
+        If this switch are used all of the old versions of your modules will get uninstalled and only the current version will be installed
 
         .EXAMPLE
-        # This will check so PowerCLI and ImportExcel is installd and up to date, it not it will install them or upgrade them to the latest version and then delete all of the old versions and import the modules.
-        Confirm-NeededModules -NeededModules "PowerCLI,ImportExcel" -ImportModules -DeleteOldVersion
+        #
+        Confirm-NeededModules -Module "PowerCLI, ImportExcel"
 
         .EXAMPLE
-        # This will only install PowerCli if it's not installed and upgrade it if needed. This example will not delete the old versions of PowerCli or import the module at the end.
-        Confirm-NeededModules -NeededModules "PowerCLI"
+        #
+        Confirm-NeededModules -Module "PowerCLI, ImportExcel" -DeleteOldVersion
 
         .EXAMPLE
-        # This will only upgrade PowerCLI module
-        Confirm-NeededModules -NeededModules "PowerCLI" -OnlyUpgrade
-
-        .EXAMPLE
-        # This will upgrade all of the already installed modules on the computer to the latest version
-        Confirm-NeededModules -OnlyUpgrade
-
-        .EXAMPLE
-        # This will upgrade all of the already installed modules on the computer to the latest version and delete all of the old versions after
-        Confirm-NeededModules -OnlyUpgrade -DeleteOldVersion
+        #
+        Confirm-NeededModules -Module "PowerCLI, ImportExcel" -DeleteOldVersion -ImportModule
 
         .NOTES
         Author:     Robin Stolpe
@@ -65,17 +54,19 @@ Function Confirm-NeededModules {
 
     [CmdletBinding()]
     Param(
-        [array]$NeededModules,
-        [switch]$ImportModules,
-        [switch]$DeleteOldVersion,
-        [switch]$OnlyUpgrade
+        [Parameter(Mandatory = $false, HelpMessage = "Specify module or modules that you want to update or install")]
+        [string]$Module,
+        [Parameter(Mandatory = $false, HelpMessage = "Use this switch if you want to import all modules that are specified in Module parameter")]
+        [switch]$ImportModule = $false,
+        [Parameter(Mandatory = $false, HelpMessage = "Use this switch if you want to delete all old versions that are installed of the modules")]
+        [switch]$DeleteOldVersion = $false
     )
-    # Collects all of the installed modules on the system
-    $CurrentModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
+    # Collect all installed modules from the system
+    $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
 
     if ($OnlyUpgrade -eq $True) {
-        if ($Null -eq $NeededModules) {
-            $NeededModules = $CurrentModules.Name
+        if ($Null -eq $Module) {
+            $Module = $InstalledModules.Name
         }
         $HeadLine = "`n=== Making sure that all modules up to date ===`n"
     }
@@ -130,10 +121,10 @@ Function Confirm-NeededModules {
         }
     }
 
-    # Checks if all modules in $NeededModules are installed and up to date.
-    foreach ($m in $NeededModules.Split(",").Trim()) {
-        if ($m -in $CurrentModules.Name -or $OnlyUpgrade -eq $true) {
-            if ($m -in $CurrentModules.Name) {
+    # Checks if all modules in $Module are installed and up to date.
+    foreach ($m in $Module.Split(",").Trim()) {
+        if ($m -in $InstalledModules.Name -or $OnlyUpgrade -eq $true) {
+            if ($m -in $InstalledModules.Name) {
                 # Collects the latest version of module
                 $NewestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
                 # Get all the installed modules and versions
@@ -193,20 +184,20 @@ Function Confirm-NeededModules {
             }
         }
     }
-    if ($ImportModules -eq $true) {
+    if ($ImportModule -eq $true) {
         # Collect all of the imported modules.
         $ImportedModules = get-module | Select-Object Name, Version
     
         # Import module if it's not imported
-        foreach ($module in $NeededModules.Split(",").Trim()) {
-            if ($module -in $ImportedModules.Name) {
-                Write-Host "$($Module) are already imported!" -ForegroundColor Green
+        foreach ($m in $Module.Split(",").Trim()) {
+            if ($m -in $ImportedModules.Name) {
+                Write-Host "$($m) are already imported!" -ForegroundColor Green
             }
             else {
                 try {
-                    Write-Host "Importing $($module) module..."
-                    Import-Module -Name $module -Force
-                    Write-Host "$($module) are now imported!" -ForegroundColor Green
+                    Write-Host "Importing $($m) module..."
+                    Import-Module -Name $m -Force
+                    Write-Host "$($m) are now imported!" -ForegroundColor Green
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
