@@ -28,7 +28,7 @@ Function Update-MModule {
         .PARAMETER ImportModule
         If this switch are used the module will import all the modules that are specified in the Module parameter at the end of the script
 
-        .PARAMETER DeleteOldVersion
+        .PARAMETER UninstallOldVersion
         If this switch are used all of the old versions of your modules will get uninstalled and only the current version will be installed
 
         .EXAMPLE
@@ -37,11 +37,11 @@ Function Update-MModule {
 
         .EXAMPLE
         # This will update the modules PowerCLI, ImportExcel and delete all of the old versions that are installed of PowerCLI, ImportExcel.
-        Update-MModule -Module "PowerCLI, ImportExcel" -DeleteOldVersion
+        Update-MModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion
 
         .EXAMPLE
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
-        Update-MModule -Module "PowerCLI, ImportExcel" -DeleteOldVersion -ImportModule
+        Update-MModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion -ImportModule
 
         .NOTES
         Author:     Robin Stolpe
@@ -59,7 +59,7 @@ Function Update-MModule {
         [Parameter(Mandatory = $false, HelpMessage = "Use this switch if you want to import all modules that are specified in Module parameter")]
         [switch]$ImportModule = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Use this switch if you want to delete all old versions that are installed of the modules")]
-        [switch]$DeleteOldVersion = $false
+        [switch]$UninstallOldVersion = $false
     )
 
     Write-Host "`n=== Making sure that all modules up to date ===`n"
@@ -110,9 +110,9 @@ Function Update-MModule {
                     Write-Error "$($PSItem.Exception)"
                     continue
                 }
-                if ($DeleteOldVersion -eq $true) {
+                if ($UninstallOldVersion -eq $true) {
                     $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
-                    
+
                     # Remove old versions of the modules
                     if ($GetAllInstalledVersions.Count -gt 1) {
                         $MostRecentVersion = $GetAllInstalledVersions[0].Version
