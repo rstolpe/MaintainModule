@@ -69,8 +69,11 @@ Function Update-MModule {
     $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
 
     # If Module parameter is empty populate it with all modules that are installed on the system
-    if ($Null -eq $Module) {
+    if ([string]::IsNullOrEmpty($Module)) {
         $Module = $InstalledModules.Name
+    }
+    else {
+        $Module = $Module.Split(",").Trim()
     }
 
     # Making sure that TLS 1.2 is used.
@@ -90,8 +93,8 @@ Function Update-MModule {
     }
 
     # Checks if all modules in $Module are installed and up to date.
-    foreach ($m in $Module.Split(",").Trim()) {
-        if ($m -in $InstalledModules.Name) {
+    foreach ($m in $Module) {
+        if ($InstalledModules.Name -contains $m) {
             # Collects the latest version of module
             $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
 
