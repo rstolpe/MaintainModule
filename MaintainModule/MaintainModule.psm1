@@ -19,8 +19,8 @@ Function Update-MModule {
         This module let you maintain your installed modules in a easy way.
 
         .DESCRIPTION
-        With this module you can update all of your installed modules in a easy way. You can also choose to delete all of the old versions that are installed of your modules
-        and only keep the current version. This module will also make sure that you are using TLS 1.2 and that PSGallery are set to trusted.
+        This module let you update all of your installed modules and also uninstall the old versions to keep things clean.
+        You can also specify module or modules that you want to update. It's also possible to install the module if it's missing and import the modules in the end of the script.
 
         .PARAMETER Module
         Specify the module or modules that you want to update, if you don't specify any module all installed modules are updated
