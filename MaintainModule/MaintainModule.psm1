@@ -23,7 +23,7 @@ Function Confirm-NeededModules {
         and only keep the current version.
 
         .PARAMETER Module
-        Specify the module or modules that you want to update.
+        Specify the module or modules that you want to update, if you don't specify any module all installed modules are updated
 
         .PARAMETER ImportModule
         If this switch are used the module will import all the modules that are specified in the Module parameter at the end of the script
@@ -54,7 +54,7 @@ Function Confirm-NeededModules {
 
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $false, HelpMessage = "Specify module or modules that you want to update or install")]
+        [Parameter(Mandatory = $false, HelpMessage = "Specify module or modules that you want to update or install, if this is empty all installed modules will be updated")]
         [string]$Module,
         [Parameter(Mandatory = $false, HelpMessage = "Use this switch if you want to import all modules that are specified in Module parameter")]
         [switch]$ImportModule = $false,
@@ -64,23 +64,18 @@ Function Confirm-NeededModules {
     # Collect all installed modules from the system
     $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
 
-    if ($OnlyUpgrade -eq $True) {
-        if ($Null -eq $Module) {
-            $Module = $InstalledModules.Name
-        }
-        $HeadLine = "`n=== Making sure that all modules up to date ===`n"
+    # If Module parameter is empty populate it with all modules that are installed on the system
+    if ($Null -eq $Module) {
+        $Module = $InstalledModules.Name
     }
-    else {
-        $HeadLine = "`n=== Making sure that all modules are installad and up to date ===`n"
+
+    Write-Host "`n=== Making sure that all modules up to date ===`n"
+    Write-Host "Please wait, this can take some time..."
+    # This packages are needed for this script to work, you can add more if you want. Don't confuse this with modules
+    <#if ($OnlyUpgrade -eq $false) {
         $NeededPackages = @("NuGet", "PowerShellGet")
         # Collects all of the installed packages
         $CurrentInstalledPackageProviders = Get-PackageProvider -ListAvailable | Select-Object Name -ExpandProperty Name
-    }
-
-    Write-Host $HeadLine
-    Write-Host "Please wait, this can take time..."
-    # This packages are needed for this script to work, you can add more if you want. Don't confuse this with modules
-    if ($OnlyUpgrade -eq $false) {
         # Making sure that TLS 1.2 is used.
         Write-Host "Making sure that TLS 1.2 is used..."
         [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -119,74 +114,61 @@ Function Confirm-NeededModules {
         else {
             Write-Host "PSGallery is already trusted" -ForegroundColor Green
         }
-    }
+    }#>
 
     # Checks if all modules in $Module are installed and up to date.
     foreach ($m in $Module.Split(",").Trim()) {
-        if ($m -in $InstalledModules.Name -or $OnlyUpgrade -eq $true) {
-            if ($m -in $InstalledModules.Name) {
-                # Collects the latest version of module
-                $NewestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
-                # Get all the installed modules and versions
-                $AllCurrentVersion = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+        if ($m -in $InstalledModules.Name) {
+            # Collects the latest version of module
+            $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
 
-                Write-Host "Checking if $($m) needs to be updated..."
-                # Check if the module are up to date
-                if ($AllCurrentVersion.Version -lt $NewestVersion.Version) {
-                    try {
-                        Write-Host "Updating $($m) to version $($NewestVersion.Version)..."
-                        Update-Module -Name $($m) -Scope AllUsers -Force
-                        Write-Host "$($m) has been updated!" -ForegroundColor Green
-                    }
-                    catch {
-                        Write-Error "$($PSItem.Exception)"
-                        continue
-                    }
-                    if ($DeleteOldVersion -eq $true) {
-                        $AllCurrentVersion = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
-                        # Remove old versions of the modules
-                        if ($AllCurrentVersion.Count -gt 1) {
-                            $MostRecentVersion = $AllCurrentVersion[0].Version
-                            Foreach ($Version in $AllCurrentVersion.Version) {
-                                if ($Version -ne $MostRecentVersion) {
-                                    try {
-                                        Write-Host "Uninstalling previous version $($Version) of module $($m)..."
-                                        Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                                        Write-Host "Version $($Version) of $($m) are now uninstalled!" -ForegroundColor Green
-                                    }
-                                    catch {
-                                        Write-Error "$($PSItem.Exception)"
-                                        continue
-                                    }
+            # Get all the installed modules and versions
+            $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+
+            Write-Host "Checking if $($m) needs to be updated..."
+            # Check if the module are up to date
+            if ($GetAllInstalledVersions.Version -lt $CollectLatestVersion.Version) {
+                try {
+                    Write-Host "Updating $($m) to version $($CollectLatestVersion.Version)..."
+                    Update-Module -Name $($m) -Scope AllUsers -Force
+                    Write-Host "$($m) has been updated!" -ForegroundColor Green
+                }
+                catch {
+                    Write-Error "$($PSItem.Exception)"
+                    continue
+                }
+                if ($DeleteOldVersion -eq $true) {
+                    $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+                    # Remove old versions of the modules
+                    if ($GetAllInstalledVersions.Count -gt 1) {
+                        $MostRecentVersion = $GetAllInstalledVersions[0].Version
+                        Foreach ($Version in $GetAllInstalledVersions.Version) {
+                            if ($Version -ne $MostRecentVersion) {
+                                try {
+                                    Write-Host "Uninstalling previous version $($Version) of module $($m)..."
+                                    Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
+                                    Write-Host "Version $($Version) of $($m) are now uninstalled!" -ForegroundColor Green
+                                }
+                                catch {
+                                    Write-Error "$($PSItem.Exception)"
+                                    continue
                                 }
                             }
                         }
                     }
                 }
-                else {
-                    Write-Host "$($m) don't need to be updated as it's on the latest version" -ForegroundColor Green
-                }
             }
             else {
-                Write-Warning "Can't check if $($m) needs to be updated as $($m) are not installed!"
+                Write-Host "$($m) don't need to be updated as it's on the latest version" -ForegroundColor Green
             }
         }
         else {
-            # Installing missing module
-            Write-Host "Installing module $($m) as it's missing..."
-            try {
-                Install-Module -Name $m -Scope AllUsers -Force
-                Write-Host "$($m) are now installed!" -ForegroundColor Green
-            }
-            catch {
-                Write-Error "$($PSItem.Exception)"
-                continue
-            }
+            Write-Warning "$($m) module are not installed, can't update it!"
         }
     }
     if ($ImportModule -eq $true) {
         # Collect all of the imported modules.
-        $ImportedModules = get-module | Select-Object Name, Version
+        $ImportedModules = Get-Module | Select-Object Name, Version
     
         # Import module if it's not imported
         foreach ($m in $Module.Split(",").Trim()) {
