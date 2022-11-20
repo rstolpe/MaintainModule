@@ -32,6 +32,9 @@ Function Update-MModule {
         .PARAMETER UninstallOldVersion
         If this switch are used all of the old versions of your modules will get uninstalled and only the current version will be installed
 
+        .PARAMETER InstallMissing
+        If you use this switch and the modules that are specified in the Module parameter are not installed on the system they will be installed.
+
         .EXAMPLE
         # This will update the modules PowerCLI, ImportExcel
         Update-MModule -Module "PowerCLI, ImportExcel"
@@ -55,12 +58,14 @@ Function Update-MModule {
 
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $false, HelpMessage = "Specify module or modules that you want to update or install, if this is empty all installed modules will be updated")]
+        [Parameter(Mandatory = $false, HelpMessage = "Specify modules that you want to update, if this is empty all of the modules that are installed on the system will get updated")]
         [string]$Module,
-        [Parameter(Mandatory = $false, HelpMessage = "Use this switch if you want to import all modules that are specified in Module parameter")]
+        [Parameter(Mandatory = $false, HelpMessage = "Imports all of the modules that are specified in the Module parameter in the end of the script")]
         [switch]$ImportModule = $false,
-        [Parameter(Mandatory = $false, HelpMessage = "Use this switch if you want to delete all old versions that are installed of the modules")]
-        [switch]$UninstallOldVersion = $false
+        [Parameter(Mandatory = $false, HelpMessage = "Uninstalls all old versions of the modules")]
+        [switch]$UninstallOldVersion = $false,
+        [Parameter(Mandatory = $false, HelpMessage = "When using this switch all modules that are specified in the Module parameter and are not installed will be installed")]
+        [switch]$InstallMissing = $false
     )
 
     Write-Host "`n=== Making sure that all modules up to date ===`n"
@@ -68,11 +73,15 @@ Function Update-MModule {
 
     # Collect all installed modules from the system
     $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
+    $EmptyModule = $false
 
     # If Module parameter is empty populate it with all modules that are installed on the system
     if ([string]::IsNullOrEmpty($Module)) {
         $EmptyModule = $true
         $Module = $InstalledModules.Name
+    }
+    else {
+        $Module = $Module.Split(",").Trim()
     }
 
     # Making sure that TLS 1.2 is used.
@@ -92,7 +101,8 @@ Function Update-MModule {
     }
 
     # Checks if all modules in $Module are installed and up to date.
-    foreach ($m in $Module.Split(",").Trim()) {
+    Write-Host "Start searching after module updates..."
+    foreach ($m in $Module.Split()) {
         if ($m -in $InstalledModules.Name) {
             # Collects the latest version of module
             $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
@@ -100,7 +110,6 @@ Function Update-MModule {
             # Get all the installed modules and versions
             $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
 
-            Write-Host "Checking if $($m) needs to be updated..."
             # Check if the module are up to date
             if ($GetAllInstalledVersions.Version -lt $CollectLatestVersion.Version) {
                 try {
@@ -134,12 +143,21 @@ Function Update-MModule {
                     }
                 }
             }
-            else {
-                Write-Host "$($m) don't need to be updated as it's on the latest version" -ForegroundColor Green
-            }
         }
         else {
-            Write-Warning "$($m) module are not installed, can't update it!"
+            if ($InstallMissing -eq $true) {
+                Write-Host "$($m) are not installed, installing $($m)..."
+                try {
+                    Update-Module -Name $($m) -Scope AllUsers -Force
+                }
+                catch {
+                    Write-Error "$($PSItem.Exception)"
+                    continue
+                }
+            }
+            else {
+                Write-Warning "$($m) module are not installed, can't update it!"
+            }
         }
     }
     if ($EmptyModule -eq $false) {

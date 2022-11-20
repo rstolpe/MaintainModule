@@ -35,8 +35,15 @@ It's possible to uninstall all of the old versions of a module after the module 
 Update-MModule -Module "VMWare.PowerCLI" -UninstallOldVersion
 ````
 
+## Install missing module or modules
+It's possible to install modules if they are not installed on the system, this only works if you have specified module or modules in the Module parameter.  
+If the module are installed already this will not have any effect and the module will only get updated.
+````
+Update-MModule -Module "VMWare.PowerCLI" -InstallMissing
+````
+
 ## Import modules in the end of the script
-You can choose to import all of the modules at the end of the script, this only works if you have specified modules in the Module parameter.
+You can choose to import all of the modules at the end of the script, this only works if you have specified module or modules in the Module parameter.
 ````
 Update-MModule -Module "VMWare.PowerCLI" -ImportModule
 ````
