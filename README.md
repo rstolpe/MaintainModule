@@ -1,4 +1,4 @@
-# NeededModules
+# MaintainModule
 This module can install specific modules and also update all PS modules that are installed to latest version and then uninstall old versions of that module.   
 This module has multiple switches to make it more dynamic read more about them in the examples below.
 ### This script will do the following
@@ -15,7 +15,7 @@ This module has multiple switches to make it more dynamic read more about them i
 
 # Install
 ```
-Install-Module -Name NeededModules
+Install-Module -Name MaintainModule
 ```
 
 # Examples
