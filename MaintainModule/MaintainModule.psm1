@@ -72,9 +72,6 @@ Function Update-MModule {
     if ([string]::IsNullOrEmpty($Module)) {
         $Module = $InstalledModules.Name
     }
-    else {
-        $Module = $Module.Split(",").Trim()
-    }
 
     # Making sure that TLS 1.2 is used.
     Write-Host "Making sure that TLS 1.2 is used..."
@@ -93,8 +90,8 @@ Function Update-MModule {
     }
 
     # Checks if all modules in $Module are installed and up to date.
-    foreach ($m in $Module) {
-        if ($InstalledModules.Name -contains $m) {
+    foreach ($m in $Module.Split(",").Trim()) {
+        if ($m -in $InstalledModules.Name) {
             # Collects the latest version of module
             $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
 
