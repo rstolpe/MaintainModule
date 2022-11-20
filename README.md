@@ -1,10 +1,12 @@
 # MaintainModule
-### This module can do the following
+## This module can do the following
 - Checks so TLS 1.2 are used by PowerShell
 - Making sure that PSGallery are set as trusted
-- If the module are installed it will check if it's the latest version if not then it will update the module.
-- If the module are updated the script will uninstall the old version of the module.
-- If selected script will import the module in the end
+- Update all modules that are installed on the system
+- Update specified modules
+- Uninstall old versions of the modules
+- If specified module are missing you can choose to install it
+- Import specified modules in the end of the script
 
 # Install
 ```
