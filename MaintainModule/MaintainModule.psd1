@@ -45,10 +45,10 @@
     Copyright         = '(c) Robin Stolpe. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'This module can install specific modules and also update all PS modules that are installed to latest version and then uninstall old versions of that module.'
+    Description       = 'With this module you can update your installed modules and remove the old versions'
 
     # Minimum version of the PowerShell engine required by this module
-    # PowerShellVersion = ''
+    PowerShellVersion = '5.1'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
@@ -110,19 +110,19 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags         = @()
+            Tags         = @("PowerShell", "macOS", "Windows", "Linux", "support-tool", "sysadmin-tool", "it-tool", "maintain-module", "module-maintenance", "multi-platform", "multiOS")
 
             # A URL to the license for this module.
-            LicenseUri   = ''
+            LicenseUri   = 'https://github.com/rstolpe/MaintainModule/blob/main/LICENSE'
 
             # A URL to the main website for this project.
-            ProjectUri   = ''
+            ProjectUri   = 'https://github.com/rstolpe/MaintainModule'
 
             # A URL to an icon representing this module.
             # IconUri = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes = ''
+            ReleaseNotes = 'https://github.com/rstolpe/MaintainModule/releases'
 
             # Prerelease string of this module
             # Prerelease = ''
@@ -138,7 +138,7 @@
     } # End of PrivateData hashtable
 
     # HelpInfo URI of this module
-    HelpInfoURI       = ''
+    HelpInfoURI       = 'https://github.com/rstolpe/MaintainModule/blob/main/README.md'
 
     # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
     # DefaultCommandPrefix = ''

@@ -54,6 +54,13 @@ Function Confirm-NeededModules {
         # This will upgrade all of the already installed modules on the computer to the latest version and delete all of the old versions after
         Confirm-NeededModules -OnlyUpgrade -DeleteOldVersion
 
+        .NOTES
+        Author:     Robin Stolpe
+        Mail:       robin@stolpe.io
+        Twitter:    @rstolpes
+        Website:    https://stolpe.io
+        GitHub:     https://github.com/rstolpe
+        PSGallery:  https://www.powershellgallery.com/profiles/rstolpe
     #>
 
     [CmdletBinding()]
