@@ -44,6 +44,10 @@ Function Update-MModule {
         Update-MModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion
 
         .EXAMPLE
+        # This will install the modules PowerCLI and/or ImportExcel on the system if they are missing, if the modules are installed already they will only get updated.
+        Update-MModule -Module "PowerCLI, ImportExcel" -InstallMissing
+
+        .EXAMPLE
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
         Update-MModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion -ImportModule
 

@@ -12,7 +12,6 @@ Install-Module -Name MaintainModule
 ```
 
 # Help
-
 ## Update all modules that are installed on the system
 You can do that if you run the command.  
 ````
