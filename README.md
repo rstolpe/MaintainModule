@@ -52,3 +52,8 @@ You can choose to import all of the modules at the end of the script, this only 
 Update-MModule -Module "VMWare.PowerCLI" -ImportModule
 ````
 
+## Clean up your current installed modules
+You can delete all of the old versions of your installed modules.
+````
+Update-MModule -CleanUp
+````

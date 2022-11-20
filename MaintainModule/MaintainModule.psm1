@@ -35,6 +35,9 @@ Function Update-MModule {
         .PARAMETER InstallMissing
         If you use this switch and the modules that are specified in the Module parameter are not installed on the system they will be installed.
 
+        .PARAMETER CleanUp
+        If this is used the module will only uninstall all of the old versions of your current installed modules
+
         .EXAMPLE
         # This will update the modules PowerCLI, ImportExcel
         Update-MModule -Module "PowerCLI, ImportExcel"
@@ -50,6 +53,10 @@ Function Update-MModule {
         .EXAMPLE
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
         Update-MModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion -ImportModule
+
+        .EXAMPLE
+        # This will only uninstall all of the old versions of your currently installed modules it will not install or update any modules.
+        Update-MModule -CleanUp
 
         .NOTES
         Author:     Robin Stolpe
@@ -69,7 +76,9 @@ Function Update-MModule {
         [Parameter(Mandatory = $false, HelpMessage = "Uninstalls all old versions of the modules")]
         [switch]$UninstallOldVersion = $false,
         [Parameter(Mandatory = $false, HelpMessage = "When using this switch all modules that are specified in the Module parameter and are not installed will be installed")]
-        [switch]$InstallMissing = $false
+        [switch]$InstallMissing = $false,
+        [Parameter(Mandatory = $false, HelpMessage = "Only uninstall all old versions of your current installed modules")]
+        [switch]$CleanUp = $false
     )
 
     Write-Host "`n=== Making sure that all modules up to date ===`n"
@@ -105,42 +114,64 @@ Function Update-MModule {
     }
 
     # Checks if all modules in $Module are installed and up to date.
-    Write-Host "Start searching after module updates..."
+    Write-Host "Collecting all of your installed modules..."
     foreach ($m in $Module.Split()) {
         if ($m -in $InstalledModules.Name) {
-            # Collects the latest version of module
-            $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
-
+            
             # Get all the installed modules and versions
             $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
 
-            # Check if the module are up to date
-            if ($GetAllInstalledVersions.Version -lt $CollectLatestVersion.Version) {
-                try {
-                    Write-Host "Updating $($m) to version $($CollectLatestVersion.Version)..."
-                    Update-Module -Name $($m) -Scope AllUsers -Force
-                    Write-Host "$($m) has been updated!" -ForegroundColor Green
+            if ($CleanUp -eq $true) {
+                # Remove old versions of the modules
+                if ($GetAllInstalledVersions.Count -gt 1) {
+                    $MostRecentVersion = $GetAllInstalledVersions[0].Version
+                    Foreach ($Version in $GetAllInstalledVersions.Version) {
+                        if ($Version -ne $MostRecentVersion) {
+                            try {
+                                Write-Host "Uninstalling previous version $($Version) of module $($m)..."
+                                Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
+                                Write-Host "Version $($Version) of $($m) are now uninstalled!" -ForegroundColor Green
+                            }
+                            catch {
+                                Write-Error "$($PSItem.Exception)"
+                                continue
+                            }
+                        }
+                    }
                 }
-                catch {
-                    Write-Error "$($PSItem.Exception)"
-                    continue
-                }
-                if ($UninstallOldVersion -eq $true) {
-                    $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+            }
+            else {
+                # Collects the latest version of module
+                $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
 
-                    # Remove old versions of the modules
-                    if ($GetAllInstalledVersions.Count -gt 1) {
-                        $MostRecentVersion = $GetAllInstalledVersions[0].Version
-                        Foreach ($Version in $GetAllInstalledVersions.Version) {
-                            if ($Version -ne $MostRecentVersion) {
-                                try {
-                                    Write-Host "Uninstalling previous version $($Version) of module $($m)..."
-                                    Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                                    Write-Host "Version $($Version) of $($m) are now uninstalled!" -ForegroundColor Green
-                                }
-                                catch {
-                                    Write-Error "$($PSItem.Exception)"
-                                    continue
+                # Check if the module are up to date
+                if ($GetAllInstalledVersions.Version -lt $CollectLatestVersion.Version) {
+                    try {
+                        Write-Host "Updating $($m) to version $($CollectLatestVersion.Version)..."
+                        Update-Module -Name $($m) -Scope AllUsers -Force
+                        Write-Host "$($m) has been updated!" -ForegroundColor Green
+                    }
+                    catch {
+                        Write-Error "$($PSItem.Exception)"
+                        continue
+                    }
+                    if ($UninstallOldVersion -eq $true) {
+                        $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+
+                        # Remove old versions of the modules
+                        if ($GetAllInstalledVersions.Count -gt 1) {
+                            $MostRecentVersion = $GetAllInstalledVersions[0].Version
+                            Foreach ($Version in $GetAllInstalledVersions.Version) {
+                                if ($Version -ne $MostRecentVersion) {
+                                    try {
+                                        Write-Host "Uninstalling previous version $($Version) of module $($m)..."
+                                        Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
+                                        Write-Host "Version $($Version) of $($m) are now uninstalled!" -ForegroundColor Green
+                                    }
+                                    catch {
+                                        Write-Error "$($PSItem.Exception)"
+                                        continue
+                                    }
                                 }
                             }
                         }
