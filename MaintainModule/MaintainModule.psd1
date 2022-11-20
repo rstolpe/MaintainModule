@@ -42,7 +42,7 @@
     CompanyName       = 'Stolpe.io'
 
     # Copyright statement for this module
-    Copyright         = '(c) Robin Stolpe. All rights reserved.'
+    Copyright         = '(c) 2022 Robin Stolpe. All rights reserved.'
 
     # Description of the functionality provided by this module
     Description       = 'This module let you maintain your installed modules in a easy way'
