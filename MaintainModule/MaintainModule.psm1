@@ -26,7 +26,8 @@ Function Update-MModule {
         Specify the module or modules that you want to update, if you don't specify any module all installed modules are updated
 
         .PARAMETER ImportModule
-        If this switch are used the module will import all the modules that are specified in the Module parameter at the end of the script
+        If this switch are used the module will import all the modules that are specified in the Module parameter at the end of the script.
+        This only works if you have specified modules in the Module parameter
 
         .PARAMETER UninstallOldVersion
         If this switch are used all of the old versions of your modules will get uninstalled and only the current version will be installed
@@ -70,6 +71,7 @@ Function Update-MModule {
 
     # If Module parameter is empty populate it with all modules that are installed on the system
     if ([string]::IsNullOrEmpty($Module)) {
+        $EmptyModule = $true
         $Module = $InstalledModules.Name
     }
 
@@ -140,24 +142,26 @@ Function Update-MModule {
             Write-Warning "$($m) module are not installed, can't update it!"
         }
     }
-    if ($ImportModule -eq $true) {
-        # Collect all of the imported modules.
-        $ImportedModules = Get-Module | Select-Object Name, Version
+    if ($EmptyModule -eq $false) {
+        if ($ImportModule -eq $true) {
+            # Collect all of the imported modules.
+            $ImportedModules = Get-Module | Select-Object Name, Version
     
-        # Import module if it's not imported
-        foreach ($m in $Module.Split(",").Trim()) {
-            if ($m -in $ImportedModules.Name) {
-                Write-Host "$($m) are already imported!" -ForegroundColor Green
-            }
-            else {
-                try {
-                    Write-Host "Importing $($m) module..."
-                    Import-Module -Name $m -Force
-                    Write-Host "$($m) are now imported!" -ForegroundColor Green
+            # Import module if it's not imported
+            foreach ($m in $Module.Split(",").Trim()) {
+                if ($m -in $ImportedModules.Name) {
+                    Write-Host "$($m) are already imported!" -ForegroundColor Green
                 }
-                catch {
-                    Write-Error "$($PSItem.Exception)"
-                    continue
+                else {
+                    try {
+                        Write-Host "Importing $($m) module..."
+                        Import-Module -Name $m -Force
+                        Write-Host "$($m) are now imported!" -ForegroundColor Green
+                    }
+                    catch {
+                        Write-Error "$($PSItem.Exception)"
+                        continue
+                    }
                 }
             }
         }

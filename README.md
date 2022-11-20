@@ -24,11 +24,20 @@ If you want you can update specific modules, you can do that with the following 
 ````
 Update-MModule -Module "VMWare.PowerCLI"
 ````
-You can also specify multiple specific module if you separate the module names with , for example ```-Module "VMWare.PowerCLI, ImportExcel"```
+You can also specify multiple specific module if you separate the module names with , for example
+````
+Update-MModule -Module "VMWare.PowerCLI, ImportExcel"
+````
 
 ## Uninstall old versions
 It's possible to uninstall all of the old versions of a module after the module has been updated, this works on all commands.
 ````
 Update-MModule -Module "VMWare.PowerCLI" -UninstallOldVersion
+````
+
+## Import modules in the end of the script
+You can choose to import all of the modules at the end of the script, this only works if you have specified modules in the Module parameter.
+````
+Update-MModule -Module "VMWare.PowerCLI" -ImportModule
 ````
 
