@@ -112,6 +112,7 @@ Function Update-MModule {
                 }
                 if ($DeleteOldVersion -eq $true) {
                     $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+                    
                     # Remove old versions of the modules
                     if ($GetAllInstalledVersions.Count -gt 1) {
                         $MostRecentVersion = $GetAllInstalledVersions[0].Version
