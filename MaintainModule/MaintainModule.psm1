@@ -13,14 +13,14 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #>
 
-Function Confirm-NeededModules {
+Function Update-MModule {
     <#
         .SYNOPSIS
         This module let you maintain your installed modules in a easy way.
 
         .DESCRIPTION
         With this module you can update all of your installed modules in a easy way. You can also choose to delete all of the old versions that are installed of your modules
-        and only keep the current version.
+        and only keep the current version. This module will also make sure that you are using TLS 1.2 and that PSGallery are set to trusted.
 
         .PARAMETER Module
         Specify the module or modules that you want to update, if you don't specify any module all installed modules are updated
@@ -32,16 +32,16 @@ Function Confirm-NeededModules {
         If this switch are used all of the old versions of your modules will get uninstalled and only the current version will be installed
 
         .EXAMPLE
-        #
-        Confirm-NeededModules -Module "PowerCLI, ImportExcel"
+        # This will update the modules PowerCLI, ImportExcel
+        Update-MModule -Module "PowerCLI, ImportExcel"
 
         .EXAMPLE
-        #
-        Confirm-NeededModules -Module "PowerCLI, ImportExcel" -DeleteOldVersion
+        # This will update the modules PowerCLI, ImportExcel and delete all of the old versions that are installed of PowerCLI, ImportExcel.
+        Update-MModule -Module "PowerCLI, ImportExcel" -DeleteOldVersion
 
         .EXAMPLE
-        #
-        Confirm-NeededModules -Module "PowerCLI, ImportExcel" -DeleteOldVersion -ImportModule
+        # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
+        Update-MModule -Module "PowerCLI, ImportExcel" -DeleteOldVersion -ImportModule
 
         .NOTES
         Author:     Robin Stolpe
@@ -71,50 +71,22 @@ Function Confirm-NeededModules {
 
     Write-Host "`n=== Making sure that all modules up to date ===`n"
     Write-Host "Please wait, this can take some time..."
-    # This packages are needed for this script to work, you can add more if you want. Don't confuse this with modules
-    <#if ($OnlyUpgrade -eq $false) {
-        $NeededPackages = @("NuGet", "PowerShellGet")
-        # Collects all of the installed packages
-        $CurrentInstalledPackageProviders = Get-PackageProvider -ListAvailable | Select-Object Name -ExpandProperty Name
-        # Making sure that TLS 1.2 is used.
-        Write-Host "Making sure that TLS 1.2 is used..."
-        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-        # Installing needed packages if it's missing.
-        Write-Host "Making sure that all of the Package providers that are needed are installed..."
-        foreach ($Provider in $NeededPackages) {
-            if ($Provider -NotIn $CurrentInstalledPackageProviders) {
-                Try {
-                    Write-Host "Installing $($Provider) as it's missing..."
-                    Install-PackageProvider -Name $provider -Force -Scope AllUsers
-                    Write-Host "$($Provider) is now installed" -ForegroundColor Green
-                }
-                catch {
-                    Write-Error "$($PSItem.Exception)"
-                    continue
-                }
-            }
-            else {
-                Write-Host "$($provider) is already installed." -ForegroundColor Green
-            }
-        }
+    # Making sure that TLS 1.2 is used.
+    Write-Host "Making sure that TLS 1.2 is used..."
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-        # Setting PSGallery as trusted if it's not trusted
-        Write-Host "Making sure that PSGallery is set to Trusted..."
-        if ((Get-PSRepository -name PSGallery | Select-Object InstallationPolicy -ExpandProperty InstallationPolicy) -eq "Untrusted") {
-            try {
-                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-                Write-Host "PSGallery is now set to trusted" -ForegroundColor Green
-            }
-            catch {
-                Write-Error "$($PSItem.Exception)"
-                continue
-            }
+    # Checking if PSGallery are set to trusted
+    if ((Get-PSRepository -name PSGallery | Select-Object InstallationPolicy -ExpandProperty InstallationPolicy) -eq "Untrusted") {
+        try {
+            Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+            Write-Host "PSGallery is now set to trusted!" -ForegroundColor Green
         }
-        else {
-            Write-Host "PSGallery is already trusted" -ForegroundColor Green
+        catch {
+            Write-Error "$($PSItem.Exception)"
+            continue
         }
-    }#>
+    }
 
     # Checks if all modules in $Module are installed and up to date.
     foreach ($m in $Module.Split(",").Trim()) {
