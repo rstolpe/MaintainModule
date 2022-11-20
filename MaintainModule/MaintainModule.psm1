@@ -203,6 +203,12 @@ Function Uninstall-RSModule {
         Specify modules that you want to uninstall older versions from, if this is left empty all of the older versions of the systems modules will be uninstalled
 
         .EXAMPLE
+        Uninstall-RSModule -Module "VMWare.PowerCLI"
+        # This will uninstall all older versions of the module VMWare.PowerCLI system.
+
+        .EXAMPLE
+        Uninstall-RSModule -Module "VMWare.PowerCLI, ImportExcel"
+        # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
 
         .NOTES
         Author:     Robin Stolpe

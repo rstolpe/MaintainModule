@@ -60,4 +60,5 @@ You can uninstall all of the older versions from one or more specific modules.
 ````
 Uninstall-RSModule -Module "VMWare.PowerCLI"
 ````
-If you want to uninstall older versions from multiple modules just add more modules separated with , in the -Module parameter. ```-Module "VMWare.PowerCli, ImportExcel"```
+If you want to uninstall older versions from multiple modules just add more modules separated with , in the -Module parameter.  
+```-Module "VMWare.PowerCli, ImportExcel"```
