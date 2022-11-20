@@ -61,6 +61,10 @@ Function Update-MModule {
         [Parameter(Mandatory = $false, HelpMessage = "Use this switch if you want to delete all old versions that are installed of the modules")]
         [switch]$DeleteOldVersion = $false
     )
+
+    Write-Host "`n=== Making sure that all modules up to date ===`n"
+    Write-Host "Please wait, this can take some time..."
+
     # Collect all installed modules from the system
     $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
 
@@ -68,9 +72,6 @@ Function Update-MModule {
     if ($Null -eq $Module) {
         $Module = $InstalledModules.Name
     }
-
-    Write-Host "`n=== Making sure that all modules up to date ===`n"
-    Write-Host "Please wait, this can take some time..."
 
     # Making sure that TLS 1.2 is used.
     Write-Host "Making sure that TLS 1.2 is used..."
