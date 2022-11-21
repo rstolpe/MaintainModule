@@ -72,69 +72,90 @@ Function Update-RSModule {
         [switch]$InstallMissing = $false
     )
 
-    Write-Host "`n=== Making sure that all modules up to date ===`n"
-    Write-Host "Please wait, this can take some time..."
+    Write-Output "`n=== Making sure that all modules up to date ===`n"
+    Write-Output "Please wait, this can take some time..."
 
     # Collect all installed modules from the system
+    Write-Verbose "Caching all installed modules from the system..."
     $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
     $EmptyModule = $false
 
     # If Module parameter is empty populate it with all modules that are installed on the system
     if ([string]::IsNullOrEmpty($Module)) {
+        Write-Verbose "Parameter Module are empty populate it with all installed modules from the system..."
         $EmptyModule = $true
         $Module = $InstalledModules.Name
     }
     else {
+        Write-Verbose "User has added modules to the Module parameter, splitting them"
         $Module = $Module.Split(",").Trim()
     }
 
     # Making sure that TLS 1.2 is used.
-    Write-Host "Making sure that TLS 1.2 is used..."
+    Write-Verbose "Making sure that TLS 1.2 is used..."
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
     # Checking if PSGallery are set to trusted
+    Write-Verbose "Checking if PowerShell Gallery are set to trusted..."
     if ((Get-PSRepository -name PSGallery | Select-Object InstallationPolicy -ExpandProperty InstallationPolicy) -eq "Untrusted") {
         try {
             Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-            Write-Host "PSGallery is now set to trusted!" -ForegroundColor Green
+            Write-Output "PowerShell Gallery has now been set to trusted!" -ForegroundColor Green
         }
         catch {
             Write-Error "$($PSItem.Exception)"
             continue
         }
     }
+    else {
+        Write-Verbose "PowerShell Gallery was already set to trusted, continuing!"
+    }
 
-    # Checks if all modules in $Module are installed and up to date.
-    Write-Host "Collecting all of your installed modules..."
+
+    # Start looping trough every module that are stored in the string Module
     foreach ($m in $Module.Split()) {
+
+        # Checking if the module are installed on the system or not.
         if ($m -in $InstalledModules.Name) {
-            
-            # Get all the installed modules and versions
+
+            # Get all of the installed versions of the module
+            Write-Verbose "Collecting all installed version of $($m)..."
             $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+
             # Collects the latest version of module
+            Write-Verbose "Looking up the latest version of $($m)..."
             $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
 
-            # Check if the module are up to date
+            # Looking if the version of the module are the latest version
             if ($GetAllInstalledVersions.Version -lt $CollectLatestVersion.Version) {
                 try {
-                    Write-Host "Updating $($m) to version $($CollectLatestVersion.Version)..."
+                    Write-Output "$($m) has a newer version $($CollectLatestVersion.Version)..."
+                    Write-Output "Updating $($m) to version $($CollectLatestVersion.Version)..."
                     Update-Module -Name $($m) -Scope AllUsers -Force
-                    Write-Host "$($m) has been updated!" -ForegroundColor Green
+                    Write-Host "$($m) has been updated to version $($CollectLatestVersion.Version)!" -ForegroundColor Green
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
                     continue
                 }
+
+                # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
                 if ($UninstallOldVersion -eq $true) {
+                    Write-Verbose "-UninstallOldVersion has been set to True..."
+                    
+                    # Collecting all of the installed versions of the module, this is needed to run again as we might have been installed a new version above.
+                    Write-Verbose "Collecting all installed version of $($m)..."
                     $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
 
-                    # Remove old versions of the modules
+                    # If the module has more then one version installed, uninstall all of the old versions.
                     if ($GetAllInstalledVersions.Count -gt 1) {
                         $MostRecentVersion = $GetAllInstalledVersions[0].Version
+
+                        # Start to uninstall all of the older versions
                         Foreach ($Version in $GetAllInstalledVersions.Version) {
                             if ($Version -ne $MostRecentVersion) {
                                 try {
-                                    Write-Host "Uninstalling previous version $($Version) of module $($m)..."
+                                    Write-Output "Uninstalling previous version $($Version) of module $($m)..."
                                     Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
                                     Write-Host "Version $($Version) of $($m) are now uninstalled!" -ForegroundColor Green
                                 }
@@ -145,14 +166,22 @@ Function Update-RSModule {
                             }
                         }
                     }
+                    else {
+                        Write-Output "$($m) don't have any older versions installed then the most current one, no need to uninstall anything."
+                    }
                 }
+            }
+            else {
+                Write-Verbose "$($m) already has the newest version installed, no need to install anything!"
             }
         }
         else {
             if ($InstallMissing -eq $true) {
-                Write-Host "$($m) are not installed, installing $($m)..."
+                Write-Verbose "-InstallMissing has been set to True..."
                 try {
+                    Write-Output "$($m) are not installed, installing $($m)..."
                     Update-Module -Name $($m) -Scope AllUsers -Force
+                    Write-Host "$($m) has now been installed!" -ForegroundColor Green
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -160,12 +189,14 @@ Function Update-RSModule {
                 }
             }
             else {
-                Write-Warning "$($m) module are not installed, can't update it!"
+                Write-Warning "$($m) module are not installed, and you have not chosen to install missing modules. Continuing without any actions!"
             }
         }
     }
     if ($EmptyModule -eq $false) {
         if ($ImportModule -eq $true) {
+            Write-Verbose "-ImportModule has been set to True..."
+            
             # Collect all of the imported modules.
             $ImportedModules = Get-Module | Select-Object Name, Version
     
@@ -213,10 +244,10 @@ Function Uninstall-RSModule {
         .NOTES
         Author:     Robin Stolpe
         Mail:       robin@stolpe.io
-        Twitter:    @rstolpes
-        Website:    https://stolpe.io
-        GitHub:     https://github.com/rstolpe
-        PSGallery:  https://www.powershellgallery.com/profiles/rstolpe
+        Website:	https://stolpe.io
+        GitHub:		https://github.com/rstolpe
+        Twitter:	https://twitter.com/rstolpes
+        PSGallery:	https://www.powershellgallery.com/profiles/rstolpe
     #>
 
     [CmdletBinding()]
@@ -225,30 +256,34 @@ Function Uninstall-RSModule {
         [string]$Module
     )
 
-    Write-Host "`n=== Uninstall old versions of your modules ===`n"
-    Write-Host "Please wait, this can take some time..."
+    Write-Output "`n=== Uninstall old versions of your modules ===`n"
+    Write-Output "Please wait, this can take some time..."
 
     # Collect all installed modules from the system
+    Write-Verbose "Caching all installed modules from the system..."
     $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
 
     # If Module parameter is empty populate it with all modules that are installed on the system
     if ([string]::IsNullOrEmpty($Module)) {
+        Write-Verbose "Parameter Module are empty populate it with all installed modules from the system..."
         $Module = $InstalledModules.Name
     }
     else {
+        Write-Verbose "User has added modules to the Module parameter, splitting them"
         $Module = $Module.Split(",").Trim()
     }
 
     foreach ($m in $Module.Split()) {
+        Write-Verbose "Collecting all installed version of the module $($m)"
         $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
 
-        # Remove old versions of the modules
+        # If the module has more then one version loop trough the versions and only keep the most current one
         if ($GetAllInstalledVersions.Count -gt 1) {
             $MostRecentVersion = $GetAllInstalledVersions[0].Version
             Foreach ($Version in $GetAllInstalledVersions.Version) {
                 if ($Version -ne $MostRecentVersion) {
                     try {
-                        Write-Host "Uninstalling previous version $($Version) of module $($m)..."
+                        Write-Output "Uninstalling previous version $($Version) of module $($m)..."
                         Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
                         Write-Host "Version $($Version) of $($m) are now uninstalled!" -ForegroundColor Green
                     }
@@ -258,8 +293,11 @@ Function Uninstall-RSModule {
                     }
                 }
             }
+            Write-Output "All older versions of $($m) are now uninstalled, the only installed version of $($m) is $($MostRecentVersion)"
+        }
+        else {
+            Write-Output "$($m) don't have any older versions installed then the most current one, no need to uninstall anything."
         }
     }
-
     Write-Host "`n== Script Finished! ==" -ForegroundColor Green
 }
