@@ -35,16 +35,20 @@ If you want you can update specific modules, you can do that with the following 
 ````
 Update-RSModule -Module "VMWare.PowerCLI"
 ````
-You can also specify multiple specific module if you separate the module names with , for example
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```
+
+### Uninstall old versions of all modules
+If you want to uninstall all of the old versions for all of your modules that you have installed
 ````
-Update-RSModule -Module "VMWare.PowerCLI, ImportExcel"
+Update-RSModule -UninstallOldVersion
 ````
 
-### Uninstall old versions
-It's possible to uninstall all of the old versions of a module after the module has been updated, this works on all commands.
+### Uninstall old versions of a specific module only
+If you want to uninstall old versions of only a specific module you can run
 ````
-Update-RSModule -Module "VMWare.PowerCLI" -UninstallOldVersion
+Update-RSModule -Module "ImportExcel" -UninstallOldVersion
 ````
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```
 
 ### Install missing module or modules
 It's possible to install modules if they are not installed on the system, this only works if you have specified module or modules in the Module parameter.  
@@ -52,19 +56,26 @@ If the module are installed already this will not have any effect and the module
 ````
 Update-RSModule -Module "VMWare.PowerCLI" -InstallMissing
 ````
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```
 
 ### Import modules in the end of the script
 You can choose to import all of the modules at the end of the script, this only works if you have specified module or modules in the Module parameter.
 ````
 Update-RSModule -Module "VMWare.PowerCLI" -ImportModule
 ````
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```
 
 ## Uninstall-RSModule
-This function let you uninstall all of the older versions from your modules.
-### Uninstall older version from specific modules
+This function let you uninstall all of the older versions of your module or modules.
+### Uninstall all older version from all of your modules
 You can uninstall all of the older versions from one or more specific modules.
 ````
-Uninstall-RSModule -Module "VMWare.PowerCLI"
+Uninstall-RSModule
 ````
-If you want to uninstall older versions from multiple modules just add more modules separated with , in the -Module parameter.  
-```-Module "VMWare.PowerCli, ImportExcel"```
+
+### Uninstall all older versions from a specific module
+If you want to uninstall all older version of a specific module
+````
+Uninstall-RSModule -Module "ImportExcel"
+````
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```

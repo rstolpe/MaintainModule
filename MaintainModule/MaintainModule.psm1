@@ -72,7 +72,7 @@ Function Update-RSModule {
         [switch]$InstallMissing = $false
     )
 
-    Write-Output "`n=== Making sure that all modules up to date ===`n"
+    Write-Output "`n=== Starting module maintenance ===`n"
     Write-Output "Please wait, this can take some time..."
 
     # Collect all installed modules from the system
@@ -100,7 +100,7 @@ Function Update-RSModule {
     if ((Get-PSRepository -name PSGallery | Select-Object InstallationPolicy -ExpandProperty InstallationPolicy) -eq "Untrusted") {
         try {
             Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-            Write-Output "PowerShell Gallery has now been set to trusted!" -ForegroundColor Green
+            Write-Output "PowerShell Gallery was not set as trusted, it's now set as trusted!"
         }
         catch {
             Write-Error "$($PSItem.Exception)"
@@ -115,7 +115,7 @@ Function Update-RSModule {
     # Start looping trough every module that are stored in the string Module
     foreach ($m in $Module.Split()) {
 
-        # Checking if the module are installed on the system or not.
+        Write-Verbose "Checks if $($m) are installed"
         if ($m -in $InstalledModules.Name) {
 
             # Get all of the installed versions of the module
@@ -129,10 +129,10 @@ Function Update-RSModule {
             # Looking if the version of the module are the latest version
             if ($GetAllInstalledVersions.Version -lt $CollectLatestVersion.Version) {
                 try {
-                    Write-Output "$($m) has a newer version $($CollectLatestVersion.Version)..."
+                    Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
                     Write-Output "Updating $($m) to version $($CollectLatestVersion.Version)..."
                     Update-Module -Name $($m) -Scope AllUsers -Force
-                    Write-Host "$($m) has been updated to version $($CollectLatestVersion.Version)!" -ForegroundColor Green
+                    Write-Output "$($m) has been updated to version $($CollectLatestVersion.Version)!"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -141,8 +141,6 @@ Function Update-RSModule {
 
                 # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
                 if ($UninstallOldVersion -eq $true) {
-                    Write-Verbose "-UninstallOldVersion has been set to True..."
-                    
                     # Collecting all of the installed versions of the module, this is needed to run again as we might have been installed a new version above.
                     Write-Verbose "Collecting all installed version of $($m)..."
                     $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
@@ -157,7 +155,7 @@ Function Update-RSModule {
                                 try {
                                     Write-Output "Uninstalling previous version $($Version) of module $($m)..."
                                     Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                                    Write-Host "Version $($Version) of $($m) are now uninstalled!" -ForegroundColor Green
+                                    Write-Output "Version $($Version) of $($m) are now uninstalled!"
                                 }
                                 catch {
                                     Write-Error "$($PSItem.Exception)"
@@ -165,9 +163,10 @@ Function Update-RSModule {
                                 }
                             }
                         }
+                        Write-Output "All older versions of $($m) are now uninstalled, the only installed version of $($m) is $($MostRecentVersion)"
                     }
                     else {
-                        Write-Output "$($m) don't have any older versions installed then the most current one, no need to uninstall anything."
+                        Write-Verbose "$($m) don't have any older versions installed then the most current one, no need to uninstall anything."
                     }
                 }
             }
@@ -176,12 +175,12 @@ Function Update-RSModule {
             }
         }
         else {
+            # If the switch InstallMissing are set to true the modules will get installed if they are missing
             if ($InstallMissing -eq $true) {
-                Write-Verbose "-InstallMissing has been set to True..."
                 try {
                     Write-Output "$($m) are not installed, installing $($m)..."
-                    Update-Module -Name $($m) -Scope AllUsers -Force
-                    Write-Host "$($m) has now been installed!" -ForegroundColor Green
+                    Install-Module -Name $($m) -Scope AllUsers -Force
+                    Write-Output "$($m) has now been installed!"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -195,21 +194,21 @@ Function Update-RSModule {
     }
     if ($EmptyModule -eq $false) {
         if ($ImportModule -eq $true) {
-            Write-Verbose "-ImportModule has been set to True..."
-            
             # Collect all of the imported modules.
+            Write-Verbose "Collecting all of the installed modules..."
             $ImportedModules = Get-Module | Select-Object Name, Version
     
             # Import module if it's not imported
-            foreach ($m in $Module.Split(",").Trim()) {
+            Write-Verbose "Starting to import the modules..."
+            foreach ($m in $Module.Split()) {
                 if ($m -in $ImportedModules.Name) {
-                    Write-Host "$($m) are already imported!" -ForegroundColor Green
+                    Write-Verbose "$($m) are already imported!"
                 }
                 else {
                     try {
-                        Write-Host "Importing $($m) module..."
+                        Write-Output "Importing $($m)..."
                         Import-Module -Name $m -Force
-                        Write-Host "$($m) are now imported!" -ForegroundColor Green
+                        Write-Output "$($m) has been imported!"
                     }
                     catch {
                         Write-Error "$($PSItem.Exception)"
@@ -219,7 +218,7 @@ Function Update-RSModule {
             }
         }
     }
-    Write-Host "`n== Script Finished! ==" -ForegroundColor Green
+    Write-Output "`n---/// Script Finished! ///---"
 }
 
 Function Uninstall-RSModule {
@@ -256,7 +255,7 @@ Function Uninstall-RSModule {
         [string]$Module
     )
 
-    Write-Output "`n=== Uninstall old versions of your modules ===`n"
+    Write-Output "`n=== Starting to uninstall older versions of modules ===`n"
     Write-Output "Please wait, this can take some time..."
 
     # Collect all installed modules from the system
@@ -285,7 +284,7 @@ Function Uninstall-RSModule {
                     try {
                         Write-Output "Uninstalling previous version $($Version) of module $($m)..."
                         Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                        Write-Host "Version $($Version) of $($m) are now uninstalled!" -ForegroundColor Green
+                        Write-Output "Version $($Version) of $($m) are now uninstalled!"
                     }
                     catch {
                         Write-Error "$($PSItem.Exception)"
@@ -296,8 +295,8 @@ Function Uninstall-RSModule {
             Write-Output "All older versions of $($m) are now uninstalled, the only installed version of $($m) is $($MostRecentVersion)"
         }
         else {
-            Write-Output "$($m) don't have any older versions installed then the most current one, no need to uninstall anything."
+            Write-Verbose "$($m) don't have any older versions installed then the most current one, no need to uninstall anything."
         }
     }
-    Write-Host "`n== Script Finished! ==" -ForegroundColor Green
+    Write-Output "`n---/// Script Finished! ///---"
 }
