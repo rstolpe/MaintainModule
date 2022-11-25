@@ -25,6 +25,9 @@ Function Update-RSModule {
         .PARAMETER Module
         Specify the module or modules that you want to update, if you don't specify any module all installed modules are updated
 
+        .PARAMETER Scope
+        Need to specify scope of the installation/update for the module, either AllUsers or CurrentUser
+
         .PARAMETER ImportModule
         If this switch are used the module will import all the modules that are specified in the Module parameter at the end of the script.
         This only works if you have specified modules in the Module parameter
