@@ -7,6 +7,10 @@ $Version = "1.0"
 $preReleaseTag = "-beta"
 #$apiKey = "test"
 
+# Creating ArrayList for use later in the script
+[System.Collections.ArrayList]$FunctionPSD = @()
+
+# Name of the module
 $ModuleName = "MaintainModule"
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $ModuleFolderPath = "$($scriptPath)/$($ModuleName)"
@@ -14,7 +18,7 @@ $srcPath = "$($scriptPath)/src"
 $srcFunctionPath = "$($scriptPath)/src/Function"
 $outPSMFile = "$($ModuleFolderPath)/$($ModuleName).psm1"
 $outPSDFile = "$($ModuleFolderPath)/$($ModuleName).psd1"
-$psdTemplate = "$($srcPath)/MaintainModule.psd1.source"
+$psdTemplate = "$($srcPath)/$($ModuleName).psd1.source"
 
 Write-Output "Starting to build the module, please wait..."
 
@@ -41,8 +45,11 @@ foreach ($function in $MigrateFunction) {
     $Functions = $Results.EndBlock.Extent.Text
     $Functions | Add-Content -Path $outPSMFile
 
+    # Converting the function name to fit the .psd1 file for exporting
+    $function = "$($function.Name -replace ".ps1", " ")"
+
     # Collect the name of all .ps1 files so it can be added as functions in the psd1 file.
-    [string]$FunctionPSD = $function.Name
+    $FunctionPSD.Add($function)
 }
 
 # Copy the .psd1.source file from the srcPath to the module folder and removing the .source ending
