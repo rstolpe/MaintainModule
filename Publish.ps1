@@ -20,17 +20,21 @@ $outPSMFile = "$($ModuleFolderPath)/$($ModuleName).psm1"
 $outPSDFile = "$($ModuleFolderPath)/$($ModuleName).psd1"
 $psdTemplate = "$($srcPath)/$($ModuleName).psd1.source"
 
-Write-Output "Starting to build the module, please wait..."
+Write-OutPut "== Preparing $($ModuleName) for publishing ==`n"
+Write-OutPut "Starting to build the module, please wait..."
 
 if (!(Test-Path $ModuleFolderPath)) {
+    Write-Verbose "Creating folder $($ModuleFolderPath)"
     New-Item -Path $ModuleFolderPath -ItemType Directory -Force
 }
 else {
     if (Test-Path $outPSMFile) {
+        Write-Verbose "Removing file $($outPSMFile)"
         Remove-Item -Path $outPSMFile -Force
     }
 
     if (Test-Path $outPSDFile) {
+        Write-Verbose "Removing file $($outPSDFile)"
         Remove-Item -Path $outPSDFile -Force
     }
 }
@@ -55,16 +59,22 @@ foreach ($function in $MigrateFunction) {
 }
 
 # Copy the .psd1.source file from the srcPath to the module folder and removing the .source ending
+Write-Verbose "Copy the file $($psdTemplate) to $($outPSDFile)"
 Copy-Item -Path $psdTemplate -Destination $outPSDFile -Force
 
 # Getting the content from the .psd1 file
+Write-Verbose "Getting the content from file $($outPSDFile)"
 $fileContent = Get-Content -Path $outPSDFile
 
 # Changing version, preReleaseTag and function in the .psd1 file
 $fileContent = $fileContent -replace '{{version}}', $version
 $fileContent = $fileContent -replace '{{preReleaseTag}}', $preReleaseTag
 $fileContent = $fileContent -replace '{{function}}', $FunctionPSD
+
+Write-Verbose "Changing the placeholders in $($outPSDFile)"
 Set-Content -Path $outPSDFile -Value $fileContent -Force
+
+Write-Output "---/// $($ModuleName) is now prepared for publishing! ///---"
 
 #Publish-Module `
 #    -Path $scriptPath\$ModuleName `
