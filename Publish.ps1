@@ -61,6 +61,14 @@ foreach ($function in $MigrateFunction) {
     $FunctionPSD.Add($function)
 }
 
+# I know that I need to fix this one, but it's the best I can think of for now to remove the last , in the ArrayList
+$FunctionPSD = $FunctionPSD | ForEach-Object { 
+    if ( $FunctionPSD.IndexOf($_) -eq ($FunctionPSD.count - 1) ) {
+        $_.replace(",", "")
+    }
+    else { $_ }  
+}
+
 # Copy the .psd1.source file from the srcPath to the module folder and removing the .source ending
 Write-Verbose "Copy the file $($psdTemplate) to $($outPSDFile)"
 Copy-Item -Path $psdTemplate -Destination $outPSDFile -Force
