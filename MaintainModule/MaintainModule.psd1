@@ -1,4 +1,4 @@
-﻿<#
+<#
     Copyright (C) 2022  Robin Stolpe
     <https://stolpe.io>
     This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@
     RootModule        = '.\MaintainModule.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '0.0.6'
+    ModuleVersion     = '1.0'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -84,7 +84,7 @@
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @("Update-RSModule", "Uninstall-RSModule")
+    FunctionsToExport = @('/Users/rstolpe/GitHub/MaintainModule/src/Function/Update-RSModule.ps1')
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport   = @()
@@ -125,7 +125,7 @@
             ReleaseNotes             = 'https://github.com/rstolpe/MaintainModule/releases'
 
             # Prerelease string of this module
-            # Prerelease = ''
+            Prerelease               = '-beta'
 
             # Flag to indicate whether the module requires explicit user acceptance for install/update/save
             RequireLicenseAcceptance = $false
@@ -142,5 +142,4 @@
 
     # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
     # DefaultCommandPrefix = ''
-
 }
