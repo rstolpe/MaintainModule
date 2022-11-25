@@ -28,6 +28,8 @@ Function Update-RSModule {
         .PARAMETER Scope
         Need to specify scope of the installation/update for the module, either AllUsers or CurrentUser. Default is CurrentUser.
         If this parameter is empty it will use CurrentUser
+        The parameter -Scope don't effect the uninstall-module function this is because of limitation from Microsoft.  
+        - Scope effect Install/update module function.
 
         .PARAMETER ImportModule
         If this switch are used the module will import all the modules that are specified in the Module parameter at the end of the script.
