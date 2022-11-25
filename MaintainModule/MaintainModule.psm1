@@ -26,7 +26,8 @@ Function Update-RSModule {
         Specify the module or modules that you want to update, if you don't specify any module all installed modules are updated
 
         .PARAMETER Scope
-        Need to specify scope of the installation/update for the module, either AllUsers or CurrentUser
+        Need to specify scope of the installation/update for the module, either AllUsers or CurrentUser. Default is CurrentUser.
+        If this parameter is empty it will use CurrentUser
 
         .PARAMETER ImportModule
         If this switch are used the module will import all the modules that are specified in the Module parameter at the end of the script.
@@ -40,7 +41,7 @@ Function Update-RSModule {
 
         .EXAMPLE
         Update-RSModule -Module "PowerCLI, ImportExcel"
-        # This will update the modules PowerCLI, ImportExcel
+        # This will update the modules PowerCLI, ImportExcel for the current user
 
         .EXAMPLE
         Update-RSModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion
