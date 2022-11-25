@@ -64,6 +64,9 @@ Function Update-RSModule {
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Specify modules that you want to update, if this is empty all of the modules that are installed on the system will get updated")]
         [string]$Module,
+        [ValidateSet("CurrentUser", "AllUsers")] 
+        [Parameter(Mandatory = $true, HelpMessage = "Choose either AllUsers or CurrentUser depending on which layer you want to update/Install/uninstall the module on")]
+        [string]$Scope = "CurrentUser",
         [Parameter(Mandatory = $false, HelpMessage = "Imports all of the modules that are specified in the Module parameter in the end of the script")]
         [switch]$ImportModule = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Uninstalls all old versions of the modules")]
@@ -131,7 +134,7 @@ Function Update-RSModule {
                 try {
                     Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
                     Write-Output "Updating $($m) to version $($CollectLatestVersion.Version)..."
-                    Update-Module -Name $($m) -Scope AllUsers -Force
+                    Update-Module -Name $($m) -Scope $Scope -Force
                     Write-Output "$($m) has been updated to version $($CollectLatestVersion.Version)!"
                 }
                 catch {
@@ -179,7 +182,7 @@ Function Update-RSModule {
             if ($InstallMissing -eq $true) {
                 try {
                     Write-Output "$($m) are not installed, installing $($m)..."
-                    Install-Module -Name $($m) -Scope AllUsers -Force
+                    Install-Module -Name $($m) -Scope $Scope -Force
                     Write-Output "$($m) has now been installed!"
                 }
                 catch {
