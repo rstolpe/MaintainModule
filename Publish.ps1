@@ -40,9 +40,11 @@ else {
 }
 
 # Collecting all .ps1 files that are located in src/function folders
+Write-Verbose "Collecting all .ps1 files from $($srcFunctionPath)"
 $MigrateFunction = @( Get-ChildItem -Path $srcFunctionPath/*.ps1 -ErrorAction SilentlyContinue -Recurse )
 
 # Looping trough the .ps1 files and migrating them to one singel .psm1 file and saving it in the module folder
+Write-Verbose "Start to migrate all functions in to the .psm1 file and collecting the function names to add in the FunctionToExport in the .psd1 file"
 foreach ($function in $MigrateFunction) {
     # Migrates all of the .ps1 files that are located in src/Function in to one .psm1 file saved in the module folder
     $Results = [System.Management.Automation.Language.Parser]::ParseFile($function, [ref]$null, [ref]$null)
