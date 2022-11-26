@@ -12,12 +12,7 @@
     [string]$apiKey
 )
 
-# When module creates this file add what version this file comes from for the EasyModuleBuild
-# Check if it's any newer version of this module, if it's any newer alert the user about it.
-# Create script to generate GUID and populate it in the manifest when generated, this should only happen in the setup new module script not in this one.
-# Create script will also populate the Company, PreReleaseTag, author and webpageURI for the manifest.
 
-# Need to find a way to handle -beta tags, might add a switch for that
 $preReleaseTag = "beta"
 
 # Creating ArrayList for use later in the script
@@ -52,9 +47,6 @@ Write-OutPut "Starting to build the module, please wait..."
 if (!(Test-Path $ModuleFolderPath)) {
     Write-Verbose "Creating folder $($ModuleFolderPath)"
     [void](New-Item -Path $ModuleFolderPath -ItemType Directory -Force)
-    
-    # add check to see if the user has this files in there user profile and wrap this to if/else
-    # if they don't have it copy it from this root module
 }
 else {
     if (Test-Path $outPSMFile) {
@@ -66,8 +58,6 @@ else {
         Write-Verbose "Removing file $($outPSDFile)"
         Remove-Item -Path $outPSDFile -Force
     }
-    # Check so .gitignore, LICENSE, README.md exists in the module folder, if not se line below what to do.
-    # check if .gitignore, LICENSE, README.md exists in user settings folder, if not copy the original ones from this modules root folder.
 }
 
 if (!(Test-Path $srcPath)) {
@@ -77,7 +67,6 @@ if (!(Test-Path $srcPath)) {
         Write-Verbose "Creating folder $($f)"
         [void](New-Item -Path $f -ItemType Directory -Force)
     }
-    # Check if the user has any settingfiles for this module if not, then Copy .psd1.source and FileLicens.ps1.source to this folder from the this modules root folder
 }
 else {
     foreach ($f in $srcNeededFolders) {
@@ -86,7 +75,6 @@ else {
             [void](New-Item -Path $f -ItemType Directory -Force)
         }
     }
-    # check so all the nessacary files are there, if not check if user has user settingsfiles for this module if he don't have it copy the original files from the root module folder
 }
 
 # Adding the text from the gnu3_add_file_licens.source to the to of the .psm1 file for licensing of GNU v3
@@ -142,8 +130,6 @@ Copy-Item -Path $psdTemplate -Destination $outPSDFile -Force
 Write-Verbose "Getting the content from file $($outPSDFile)"
 $PSDfileContent = Get-Content -Path $outPSDFile
 
-# Can I do a loop here? I just might :) remember to check if the varible is empty or not
-# Changing version, preReleaseTag and function in the .psd1 file
 Write-Verbose "Replacing the placeholders in the $($outPSDFile) file"
 $PSDfileContent = $PSDfileContent -replace '{{manifestDate}}', $ManifestDate
 $PSDfileContent = $PSDfileContent -replace '{{moduleName}}', $ModuleName
