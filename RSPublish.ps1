@@ -21,7 +21,7 @@ $outPSMFile = "$($ModuleFolderPath)/$($ModuleName).psm1"
 $outPSDFile = "$($ModuleFolderPath)/$($ModuleName).psd1"
 $psdTemplate = "$($srcPath)/$($ModuleName).psd1.source"
 
-Write-OutPut "== Preparing $($ModuleName) for publishing ==`n"
+Write-OutPut "`n== Preparing $($ModuleName) for publishing ==`n"
 Write-OutPut "Starting to build the module, please wait..."
 
 if (!(Test-Path $ModuleFolderPath)) {
