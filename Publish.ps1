@@ -58,7 +58,7 @@ foreach ($function in $MigrateFunction) {
     $function.trim()
 
     # Collect the name of all .ps1 files so it can be added as functions in the psd1 file.
-    $FunctionPSD.Add($function)
+    [void]($FunctionPSD.Add($function))
 }
 
 # I know that I need to fix this one, but it's the best I can think of for now to remove the last , in the ArrayList
