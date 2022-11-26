@@ -4,7 +4,7 @@
 #    [string] $apiKey
 #)
 
-$Version = "1.0"
+$Version = "0.7"
 $preReleaseTag = "-beta"
 #$apiKey = "test"
 
@@ -12,7 +12,7 @@ $preReleaseTag = "-beta"
 [System.Collections.ArrayList]$FunctionPSD = @()
 
 # Name of the module
-$ModuleName = "MaintainModule"
+$ModuleName = $(Get-Location) -split "/" | select -last 1
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $ModuleFolderPath = "$($scriptPath)/$($ModuleName)"
 $srcPath = "$($scriptPath)/src"
