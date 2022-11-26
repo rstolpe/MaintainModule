@@ -4,7 +4,7 @@
 #    [string] $apiKey
 #)
 
-$Version = "0.8"
+$Version = "0.7"
 $preReleaseTag = "-beta"
 #$apiKey = "test"
 
