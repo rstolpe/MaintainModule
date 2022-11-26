@@ -7,12 +7,13 @@
 $Version = "0.0.7"
 #$preReleaseTag = "-beta"
 #$apiKey = "test"
+$Year = (Get-Date).Year
 
 # Creating ArrayList for use later in the script
 [System.Collections.ArrayList]$FunctionPSD = @()
 
 # Name of the module
-$ModuleName = $(Get-Location) -split "/" | select -last 1
+$ModuleName = $(Get-Location) -split "/" | Select-Object -last 1
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $ModuleFolderPath = "$($scriptPath)/$($ModuleName)"
 $srcPath = "$($scriptPath)/src"
@@ -20,6 +21,7 @@ $srcPublicFunctionPath = "$($scriptPath)/src/public/function"
 $outPSMFile = "$($ModuleFolderPath)/$($ModuleName).psm1"
 $outPSDFile = "$($ModuleFolderPath)/$($ModuleName).psd1"
 $psdTemplate = "$($srcPath)/$($ModuleName).psd1.source"
+$psmLicensPath = "$($srcPath)/FileLicens.ps1"
 
 Write-OutPut "`n== Preparing $($ModuleName) for publishing ==`n"
 Write-OutPut "Starting to build the module, please wait..."
@@ -39,6 +41,12 @@ else {
         Remove-Item -Path $outPSDFile -Force
     }
 }
+
+# Adding the text from the filelicens.ps1 to the .psm1 file for licensing of GNU v3
+$psmLicens = @( Get-ChildItem -Path $psmLicensPath -ErrorAction SilentlyContinue -Recurse )
+$Results = [System.Management.Automation.Language.Parser]::ParseFile($psmLicens, [ref]$null, [ref]$null)
+$Functions = $Results.EndBlock.Extent.Text
+$Functions | Add-Content -Path $outPSMFile
 
 # Collecting all .ps1 files that are located in src/function folders
 Write-Verbose "Collecting all .ps1 files from $($srcPublicFunctionPath)"
@@ -78,6 +86,8 @@ Write-Verbose "Getting the content from file $($outPSDFile)"
 $fileContent = Get-Content -Path $outPSDFile
 
 # Changing version, preReleaseTag and function in the .psd1 file
+$fileContent = $fileContent -replace '{{moduleName}}', $ModuleName
+$fileContent = $fileContent -replace '{{year}}', $Year
 $fileContent = $fileContent -replace '{{version}}', $version
 $fileContent = $fileContent -replace '{{preReleaseTag}}', $preReleaseTag
 $fileContent = $fileContent -replace '{{function}}', $FunctionPSD
