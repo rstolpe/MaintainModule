@@ -150,7 +150,7 @@ Function Update-RSModule {
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Specify modules that you want to update, if this is empty all of the modules that are installed on the system will get updated")]
         [string]$Module,
-        [ValidateSet("CurrentUser", "AllUsers")] 
+        [ValidateSet("CurrentUser", "AllUsers", $null)] 
         [Parameter(Mandatory = $true, HelpMessage = "Choose either AllUsers or CurrentUser depending on which layer you want to update/Install/uninstall the module on")]
         [string]$Scope = "CurrentUser",
         [Parameter(Mandatory = $false, HelpMessage = "Imports all of the modules that are specified in the Module parameter in the end of the script")]
