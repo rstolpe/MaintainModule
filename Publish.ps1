@@ -5,7 +5,7 @@
 #)
 
 $Version = "0.0.7"
-$preReleaseTag = "-beta"
+#$preReleaseTag = "-beta"
 #$apiKey = "test"
 
 # Creating ArrayList for use later in the script
@@ -16,7 +16,7 @@ $ModuleName = $(Get-Location) -split "/" | select -last 1
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $ModuleFolderPath = "$($scriptPath)/$($ModuleName)"
 $srcPath = "$($scriptPath)/src"
-$srcFunctionPath = "$($scriptPath)/src/Function"
+$srcPublicFunctionPath = "$($scriptPath)/src/public/function"
 $outPSMFile = "$($ModuleFolderPath)/$($ModuleName).psm1"
 $outPSDFile = "$($ModuleFolderPath)/$($ModuleName).psd1"
 $psdTemplate = "$($srcPath)/$($ModuleName).psd1.source"
@@ -41,8 +41,8 @@ else {
 }
 
 # Collecting all .ps1 files that are located in src/function folders
-Write-Verbose "Collecting all .ps1 files from $($srcFunctionPath)"
-$MigrateFunction = @( Get-ChildItem -Path $srcFunctionPath/*.ps1 -ErrorAction SilentlyContinue -Recurse )
+Write-Verbose "Collecting all .ps1 files from $($srcPublicFunctionPath)"
+$MigrateFunction = @( Get-ChildItem -Path $srcPublicFunctionPath/*.ps1 -ErrorAction SilentlyContinue -Recurse )
 
 # Looping trough the .ps1 files and migrating them to one singel .psm1 file and saving it in the module folder
 Write-Verbose "Start to migrate all functions in to the .psm1 file and collecting the function names to add in the FunctionToExport in the .psd1 file"
