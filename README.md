@@ -88,8 +88,6 @@ You can uninstall all of the older versions from one or more specific modules.
 ````
 Uninstall-RSModule
 ````
-You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
-If -Scope parameter are empty it will set it as CurrentUser as default.
 
 ### Uninstall all older versions from a specific module
 If you want to uninstall all older version of a specific module
@@ -97,5 +95,3 @@ If you want to uninstall all older version of a specific module
 Uninstall-RSModule -Module "ImportExcel"
 ````
 The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```
-You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
-If -Scope parameter are empty it will set it as CurrentUser as default.

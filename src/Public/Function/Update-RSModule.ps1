@@ -27,7 +27,7 @@
         If you use this switch and the modules that are specified in the Module parameter are not installed on the system they will be installed.
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI, ImportExcel"
+        Update-RSModule -Module "PowerCLI, ImportExcel" -Scope CurrentUser
         # This will update the modules PowerCLI, ImportExcel for the current user
 
         .EXAMPLE
@@ -42,6 +42,9 @@
         Update-RSModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion -ImportModule
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
 
+        .RELATED LINKS
+        https://github.com/rstolpe/MaintainModule/blob/main/README.md
+
         .NOTES
         Author:     Robin Stolpe
         Mail:       robin@stolpe.io
@@ -53,16 +56,16 @@
 
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $false, HelpMessage = "Specify modules that you want to update, if this is empty all of the modules that are installed on the system will get updated")]
+        [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules (separated with ,) that you want to update, if you don't enter any all of the modules will be updated")]
         [string]$Module,
         [ValidateSet("CurrentUser", "AllUsers")] 
-        [Parameter(Mandatory = $true, HelpMessage = "Choose either AllUsers or CurrentUser depending on which layer you want to update/Install/uninstall the module on")]
+        [Parameter(Mandatory = $true, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules")]
         [string]$Scope = "CurrentUser",
-        [Parameter(Mandatory = $false, HelpMessage = "Imports all of the modules that are specified in the Module parameter in the end of the script")]
+        [Parameter(Mandatory = $false, HelpMessage = "Import modules that has been entered in the module parameter at the end of this function")]
         [switch]$ImportModule = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Uninstalls all old versions of the modules")]
         [switch]$UninstallOldVersion = $false,
-        [Parameter(Mandatory = $false, HelpMessage = "When using this switch all modules that are specified in the Module parameter and are not installed will be installed")]
+        [Parameter(Mandatory = $false, HelpMessage = "Install all of the modules that has been entered in module that are not installed on the system")]
         [switch]$InstallMissing = $false
     )
 
@@ -135,33 +138,7 @@
 
                 # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
                 if ($UninstallOldVersion -eq $true) {
-                    # Collecting all of the installed versions of the module, this is needed to run again as we might have been installed a new version above.
-                    Write-Verbose "Collecting all installed version of $($m)..."
-                    $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
-
-                    # If the module has more then one version installed, uninstall all of the old versions.
-                    if ($GetAllInstalledVersions.Count -gt 1) {
-                        $MostRecentVersion = $GetAllInstalledVersions[0].Version
-
-                        # Start to uninstall all of the older versions
-                        Foreach ($Version in $GetAllInstalledVersions.Version) {
-                            if ($Version -ne $MostRecentVersion) {
-                                try {
-                                    Write-Output "Uninstalling previous version $($Version) of module $($m)..."
-                                    Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                                    Write-Output "Version $($Version) of $($m) are now uninstalled!"
-                                }
-                                catch {
-                                    Write-Error "$($PSItem.Exception)"
-                                    continue
-                                }
-                            }
-                        }
-                        Write-Output "All older versions of $($m) are now uninstalled, the only installed version of $($m) is $($MostRecentVersion)"
-                    }
-                    else {
-                        Write-Verbose "$($m) don't have any older versions installed then the most current one, no need to uninstall anything."
-                    }
+                    Uninstall-RSModule -Module $m
                 }
             }
             else {
