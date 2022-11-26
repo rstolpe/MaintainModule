@@ -1,12 +1,14 @@
-﻿#param (
-#    [string] $version,
-#    [string] $preReleaseTag,
-#    [string] $apiKey
-#)
+﻿param (
+    #[string]$version,
+    #[string]$preReleaseTag,
+    [Parameter(Mandatory = $false, HelpMessage = "Use this switch if you want to publish to PSGallery after the module has been prepared")]
+    [bool]$Publish = $false,
+    [Parameter(Mandatory = $false, HelpMessage = "Write your API key for PSGallery")]
+    [string]$apiKey
+)
 
 $Version = "0.0.7"
 #$preReleaseTag = "-beta"
-#$apiKey = "test"
 $Year = (Get-Date).Year
 $ManifestDate = Get-Date -Format "yyyy-MM-dd"
 
@@ -45,8 +47,6 @@ else {
 
 # Adding the text from the filelicens.ps1 to the .psm1 file for licensing of GNU v3
 $psmLicens = Get-Content -Path $psmLicensPath -ErrorAction SilentlyContinue
-#$Results = [System.Management.Automation.Language.Parser]::ParseFile($psmLicens, [ref]$null, [ref]$null)
-#$Functions = $Results.EndBlock.Extent.Text
 $psmLicens | Add-Content -Path $outPSMFile
 
 # Collecting all .ps1 files that are located in src/function folders
@@ -97,9 +97,9 @@ $fileContent = $fileContent -replace '{{function}}', $FunctionPSD
 Write-Verbose "Changing the placeholders in $($outPSDFile)"
 Set-Content -Path $outPSDFile -Value $fileContent -Force
 
-Write-Output "---/// $($ModuleName) is now prepared for publishing! ///---"
-
-#Publish-Module `
-#    -Path $scriptPath\$ModuleName `
-#    -NuGetApiKey $apiKey `
-#    -Verbose -Force
+if ($Publish -eq $true) {
+    Publish-Module -Path $ModuleFolderPath -NuGetApiKey $apiKey -Force
+}
+else {
+    Write-Output "---/// $($ModuleName) is now prepared for publishing! ///---"
+}
