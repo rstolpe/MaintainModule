@@ -29,7 +29,7 @@
         PSGallery:	https://www.powershellgallery.com/profiles/rstolpe
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the module or modules (separated with ,) you want to uninstall")]
         [string]$Module

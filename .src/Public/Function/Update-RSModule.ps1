@@ -54,7 +54,7 @@
         PSGallery:  https://www.powershellgallery.com/profiles/rstolpe
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules (separated with ,) that you want to update, if you don't enter any all of the modules will be updated")]
         [string]$Module,
