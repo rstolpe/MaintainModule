@@ -27,8 +27,8 @@ $ModuleName = $(Get-Location) -split "/" | Select-Object -last 1
 # Paths for different sections inside the module
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $ModuleFolderPath = "$($scriptPath)/$($ModuleName)"
-$srcPath = "$($scriptPath)/src"
-$srcPublicFunctionPath = "$($scriptPath)/src/public/function"
+$srcPath = "$($scriptPath)/.src"
+$srcPublicFunctionPath = "$($scriptPath)/.src/public/function"
 $outPSMFile = "$($ModuleFolderPath)/$($ModuleName).psm1"
 $outPSDFile = "$($ModuleFolderPath)/$($ModuleName).psd1"
 $psdTemplate = "$($srcPath)/$($ModuleName).psd1.source"
