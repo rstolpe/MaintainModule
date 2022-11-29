@@ -1,17 +1,19 @@
 ﻿param (
+    # Set this to true before releasing the module
     [Parameter(Mandatory = $false, HelpMessage = "Enter the version number of this release")]
     [string]$Version = "1.0.0",
+    # Fix this
     [Parameter(Mandatory = $false, HelpMessage = ".")]
     [string]$preRelease = "Alpha",
     [Parameter(Mandatory = $false, HelpMessage = "Use this switch to publish this module on PSGallery")]
     [bool]$Publish = $false,
+    # Validate so if $Publish is true this is needed
     [Parameter(Mandatory = $false, HelpMessage = "Enter API key for PSGallery")]
     [string]$apiKey
 )
 
-# THIS IS A BETA FILE DONT USE THIS FILE! ILL RELEASE A ALPHA VERSION OF THIS LATER ON!
-
 #Requires -Modules PSScriptAnalyzer
+Import-Module -Name EasyModuleBuild -Force
 
 # Creating ArrayList for use later in the script
 [System.Collections.ArrayList]$FunctionPSD = @()
@@ -29,6 +31,7 @@ $outPSDFile = Join-Path -Path $ModuleFolderPath -ChildPath "$($ModuleName).psd1"
 $psdTemplate = Join-Path -Path $srcPath -ChildPath "$($ModuleName).psd1.source"
 $psmLicensPath = Join-Path -Path $srcPath -ChildPath "License"
 $TestPath = Join-Path -Path $scriptPath -ChildPath "test"
+#$EMBSourceFiles = "$($env:PSModulePath)/EasyModuleBuild/source_files"
 
 Write-OutPut "`n== Building module $($ModuleName) ==`n"
 Write-OutPut "Starting to build the module, please wait..."
@@ -94,6 +97,7 @@ Copy-Item -Path $psdTemplate -Destination $outPSDFile -Force
 Write-Verbose "Getting the content from file $($outPSDFile)"
 $PSDfileContent = Get-Content -Path $outPSDFile
 
+# Changing version, preReleaseTag and function in the .psd1 file
 Write-Verbose "Replacing the placeholders in the $($outPSDFile) file"
 $PSDfileContent = $PSDfileContent -replace '{{manifestDate}}', $TodaysDate
 $PSDfileContent = $PSDfileContent -replace '{{moduleName}}', $ModuleName
@@ -112,23 +116,27 @@ else {
 Write-Verbose "Setting the placeholders for $($outPSDFile)"
 Set-Content -Path $outPSDFile -Value $PSDfileContent -Force
 
-Write-Output "Running PSScriptAnalyzer on the .psd1 $($outPSDFile)..."
-# If no issue are found that should be written in the outfile
-$PSAnalyzerPSD = Invoke-ScriptAnalyzer -Path $outPSDFile -ReportSummary
-if ($null -ne $PSAnalyzerPSD) {
-    $PSAnalyzerPSD | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_psd1_$($TodaysDate).md")
-}
-else {
-    Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_psd1_$($TodaysDate).md")
+foreach ($ps1 in $MigrateFunction) {
+    Write-Output "Running PSScriptAnalyzer on $($ps1)..."
+    $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
+    if ($null -ne $PSAnalyzerPS1) {
+        $PSAnalyzerPS1 | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1.Name)_$($TodaysDate).md")
+    }
+    else {
+        Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1.Name)_$($TodaysDate).md")
+    }
 }
 
-Write-Output "Running PSScriptAnalyzer on all .ps1 files in $($srcPublicFunctionPath)..."
-$PSAnalyzer = Invoke-ScriptAnalyzer -Path $srcPublicFunctionPath -Recurse -ReportSummary
-if ($null -ne $PSAnalyzer) {
-    $PSAnalyzer | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_ps1_$($TodaysDate).md")
-}
-else {
-    Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_ps1_$($TodaysDate).md")
+$CheckPSA = @($outPSDFile, $outPSMFile)
+foreach ($file in $CheckPSA) {
+    Write-Output "Running PSScriptAnalyzer on the $($file)"
+    $PSAnalyzer = Invoke-ScriptAnalyzer -Path $file -ReportSummary
+    if ($null -ne $PSAnalyzer) {
+        $PSAnalyzer | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($file -split "/" | Select-Object -Last 1)_$($TodaysDate).md")
+    }
+    else {
+        Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($file -split "/" | Select-Object -Last 1)_$($TodaysDate).md")
+    }
 }
 
 # Import the module and save the Get-Help files to the $HelpPath for the module, files get saved in .md format
@@ -144,7 +152,7 @@ foreach ($m in $mCommands) {
     }
 }
 
-if ($PSAnalyzer.Severity -contains "Warning" -or $PSAnalyzerPSD -contains "Warning") {
+if ($PSAnalyzer.Severity -contains "Warning" -or $PSAnalyzerPS1 -contains "Warning") {
     $PSAnalyzer
     Write-Error "PSAnalyzer severity did contain Warning, please fix this and run the RSModuleBuilder again. You can se the results from PSAnalyzer above this row."
     Break
