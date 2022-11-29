@@ -33,7 +33,7 @@ Function Uninstall-RSModule {
         Uninstall-RSModule -Module "VMWare.PowerCLI, ImportExcel"
         # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
 
-        .RELATED LINKS
+        .LINK
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES
@@ -97,7 +97,7 @@ Function Uninstall-RSModule {
     Write-Output "`n---/// Script Finished! ///---"
 }
 Function Update-RSModule {
-    <#        
+    <#
         .SYNOPSIS
         This module let you maintain your installed modules in a easy way.
 
@@ -111,7 +111,7 @@ Function Update-RSModule {
         .PARAMETER Scope
         Need to specify scope of the installation/update for the module, either AllUsers or CurrentUser. Default is CurrentUser.
         If this parameter is empty it will use CurrentUser
-        The parameter -Scope don't effect the uninstall-module function this is because of limitation from Microsoft.  
+        The parameter -Scope don't effect the uninstall-module function this is because of limitation from Microsoft.
         - Scope effect Install/update module function.
 
         .PARAMETER ImportModule
@@ -140,7 +140,7 @@ Function Update-RSModule {
         Update-RSModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion -ImportModule
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
 
-        .RELATED LINKS
+        .LINK
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES
@@ -156,8 +156,8 @@ Function Update-RSModule {
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules (separated with ,) that you want to update, if you don't enter any all of the modules will be updated")]
         [string]$Module,
-        [ValidateSet("CurrentUser", "AllUsers")] 
-        [Parameter(Mandatory = $true, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules")]
+        [ValidateSet("CurrentUser", "AllUsers")]
+        [Parameter(Mandatory = $false, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules")]
         [string]$Scope = "CurrentUser",
         [Parameter(Mandatory = $false, HelpMessage = "Import modules that has been entered in the module parameter at the end of this function")]
         [switch]$ImportModule = $false,
@@ -266,7 +266,7 @@ Function Update-RSModule {
             # Collect all of the imported modules.
             Write-Verbose "Collecting all of the installed modules..."
             $ImportedModules = Get-Module | Select-Object Name, Version
-    
+
             # Import module if it's not imported
             Write-Verbose "Starting to import the modules..."
             foreach ($m in $Module.Split()) {

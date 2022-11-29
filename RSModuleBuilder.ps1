@@ -1,81 +1,43 @@
 ﻿param (
-    # Set this to true before releasing the module
     [Parameter(Mandatory = $false, HelpMessage = "Enter the version number of this release")]
-    [string]$Version = "0.0.8",
-    # Fix this
+    [string]$Version = "1.0.0",
     [Parameter(Mandatory = $false, HelpMessage = ".")]
-    [string]$preRelease,
+    [string]$preRelease = "Alpha",
     [Parameter(Mandatory = $false, HelpMessage = "Use this switch to publish this module on PSGallery")]
     [bool]$Publish = $false,
-    # Validate so if $Publish is true this is needed
     [Parameter(Mandatory = $false, HelpMessage = "Enter API key for PSGallery")]
     [string]$apiKey
 )
 
+# THIS IS A BETA FILE DONT USE THIS FILE! ILL RELEASE A ALPHA VERSION OF THIS LATER ON!
 
-$preReleaseTag = "beta"
+#Requires -Modules PSScriptAnalyzer
 
 # Creating ArrayList for use later in the script
 [System.Collections.ArrayList]$FunctionPSD = @()
 
 $Year = (Get-Date).Year
-$ManifestDate = Get-Date -Format "yyyy-MM-dd"
-
-# Gets the folder name from the folder where this script are located
+$TodaysDate = Get-Date -Format "yyyy-MM-dd"
 $ModuleName = $(Get-Location) -split "/" | Select-Object -last 1
-
-# Paths for different sections inside the module
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
-$ModuleFolderPath = "$($scriptPath)/$($ModuleName)"
-$srcPath = "$($scriptPath)/.src"
-$srcPublicFunctionPath = "$($scriptPath)/.src/public/function"
-$outPSMFile = "$($ModuleFolderPath)/$($ModuleName).psm1"
-$outPSDFile = "$($ModuleFolderPath)/$($ModuleName).psd1"
-$psdTemplate = "$($srcPath)/$($ModuleName).psd1.source"
-$psmLicensPath = "$($srcPath)/License"
-$EMBSourceFiles = "$($env:PSModulePath)/EasyModuleBuild/source_files"
+$HelpPath = Join-Path -Path $scriptPath -ChildPath "help"
+$ModuleFolderPath = Join-Path -Path $scriptPath -ChildPath $ModuleName
+$srcPath = Join-Path -Path $scriptPath -ChildPath ".src"
+$srcPublicFunctionPath = Join-Path -Path $srcPath -ChildPath "public/function"
+$outPSMFile = Join-Path -Path $ModuleFolderPath -ChildPath "$($ModuleName).psm1"
+$outPSDFile = Join-Path -Path $ModuleFolderPath -ChildPath "$($ModuleName).psd1"
+$psdTemplate = Join-Path -Path $srcPath -ChildPath "$($ModuleName).psd1.source"
+$psmLicensPath = Join-Path -Path $srcPath -ChildPath "License"
+$TestPath = Join-Path -Path $scriptPath -ChildPath "test"
 
-# Needed folders
-$srcNeededFolders = @("$($srcPath)/Private", "$($srcPath)/Private/Function", "$($srcPath)/Public", "$($srcPath)/Public/Function")
-
-# Needed files
-$moduleNeededFiles = @("$($scriptPath)/.gitignore", "$($scriptPath)/LICENSE", "$($scriptPath)/README.md")
-
-Write-OutPut "`n== Preparing $($ModuleName) for publishing ==`n"
+Write-OutPut "`n== Building module $($ModuleName) ==`n"
 Write-OutPut "Starting to build the module, please wait..."
 
-if (!(Test-Path $ModuleFolderPath)) {
-    Write-Verbose "Creating folder $($ModuleFolderPath)"
-    [void](New-Item -Path $ModuleFolderPath -ItemType Directory -Force)
-}
-else {
-    if (Test-Path $outPSMFile) {
-        Write-Verbose "Removing file $($outPSMFile)"
-        Remove-Item -Path $outPSMFile -Force
-    }
+# Check so all the needed folders exists, if they don't they will get created.
+Checkpoint-RSFolderFile -ModulePath $scriptPath -ModuleName $ModuleName -New $false
 
-    if (Test-Path $outPSDFile) {
-        Write-Verbose "Removing file $($outPSDFile)"
-        Remove-Item -Path $outPSDFile -Force
-    }
-}
-
-if (!(Test-Path $srcPath)) {
-    Write-Verbose "Creating folder $($srcPath)"
-    New-Item -Path $srcPath -ItemType Directory -Force
-    foreach ($f in $srcNeededFolders) {
-        Write-Verbose "Creating folder $($f)"
-        [void](New-Item -Path $f -ItemType Directory -Force)
-    }
-}
-else {
-    foreach ($f in $srcNeededFolders) {
-        if (!(Test-Path $f)) {
-            Write-Verbose "Creating folder $($f)"
-            [void](New-Item -Path $f -ItemType Directory -Force)
-        }
-    }
-}
+# Deleting existing files that will get replaced by this script
+Remove-RSContent -ModuleName $ModuleName -ScriptPath $scriptPath -ExistingModule
 
 # Adding the text from the gnu3_add_file_licens.source to the to of the .psm1 file for licensing of GNU v3
 $psmLicens = Get-Content -Path "$($psmLicensPath)/gnu3_add_file_licens.source" -ErrorAction SilentlyContinue
@@ -96,7 +58,7 @@ foreach ($function in $MigrateFunction) {
     # Converting the function name to fit the .psd1 file for exporting
     $function = $function.Name -replace ".ps1"
     $function = """$($function)"","
-    $function.trim()
+    [void]($function.trim())
 
     # Collect the name of all .ps1 files so it can be added as functions in the psd1 file.
     [void]($FunctionPSD.Add($function))
@@ -104,23 +66,25 @@ foreach ($function in $MigrateFunction) {
 
 # if $MigrateFunction are not empty remove the last , from the $FunctionPSD ArrayList
 if ($null -ne $MigrateFunction) {
-    # I know that I need to fix this one, but it's the best I can think of for now to remove the last , in the ArrayList
-    $FunctionPSD = $FunctionPSD | ForEach-Object { 
+    $FunctionPSD = $FunctionPSD | ForEach-Object {
         if ( $FunctionPSD.IndexOf($_) -eq ($FunctionPSD.count - 1) ) {
             $_.replace(",", "")
         }
-        else { $_ }  
+        else {
+            $_
+        }
     }
 }
 
 # Change the placeholder in the $outPSMFile file
 Write-Verbose "Getting the content from file $($outPSMFile)"
 $PSMfileContent = Get-Content -Path $outPSMFile
+
 Write-Verbose "Replacing the placeholders in the $($outPSMFile) file"
 $PSMfileContent = $PSMfileContent -replace '{{year}}', $year
 
 Write-Verbose "Setting the placeholders for $($outPSMFile)"
-Set-Content -Path $outPSMFile -Value $PSMfileContent  -Force
+Set-Content -Path $outPSMFile -Value $PSMfileContent -Force
 
 # Copy the .psd1.source file from the srcPath to the module folder and removing the .source ending
 Write-Verbose "Copy the file $($psdTemplate) to $($outPSDFile)"
@@ -131,7 +95,7 @@ Write-Verbose "Getting the content from file $($outPSDFile)"
 $PSDfileContent = Get-Content -Path $outPSDFile
 
 Write-Verbose "Replacing the placeholders in the $($outPSDFile) file"
-$PSDfileContent = $PSDfileContent -replace '{{manifestDate}}', $ManifestDate
+$PSDfileContent = $PSDfileContent -replace '{{manifestDate}}', $TodaysDate
 $PSDfileContent = $PSDfileContent -replace '{{moduleName}}', $ModuleName
 $PSDfileContent = $PSDfileContent -replace '{{year}}', $Year
 $PSDfileContent = $PSDfileContent -replace '{{version}}', $version
@@ -148,12 +112,49 @@ else {
 Write-Verbose "Setting the placeholders for $($outPSDFile)"
 Set-Content -Path $outPSDFile -Value $PSDfileContent -Force
 
+Write-Output "Running PSScriptAnalyzer on the .psd1 $($outPSDFile)..."
+# If no issue are found that should be written in the outfile
+$PSAnalyzerPSD = Invoke-ScriptAnalyzer -Path $outPSDFile -ReportSummary
+if ($null -ne $PSAnalyzerPSD) {
+    $PSAnalyzerPSD | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_psd1_$($TodaysDate).md")
+}
+else {
+    Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_psd1_$($TodaysDate).md")
+}
+
+Write-Output "Running PSScriptAnalyzer on all .ps1 files in $($srcPublicFunctionPath)..."
+$PSAnalyzer = Invoke-ScriptAnalyzer -Path $srcPublicFunctionPath -Recurse -ReportSummary
+if ($null -ne $PSAnalyzer) {
+    $PSAnalyzer | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_ps1_$($TodaysDate).md")
+}
+else {
+    Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_ps1_$($TodaysDate).md")
+}
+
+# Import the module and save the Get-Help files to the $HelpPath for the module, files get saved in .md format
+Write-Verbose "Importing $($ModuleName) to the session..."
+Import-Module -Name $($ModuleFolderPath) -MinimumVersion $Version -Force
+
+Write-Verbose "Writing $($ModuleName) functions to help files in $($HelpPath)..."
+$mCommands = Get-Command -Module $ModuleName
+foreach ($m in $mCommands) {
+    if ($null -ne $m) {
+        Write-Verbose "Creating help file of function $($m.Name)..."
+        Get-Help -name $m.Name -Full | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $HelpPath -ChildPath "$($m.Name).md")
+    }
+}
+
+if ($PSAnalyzer.Severity -contains "Warning" -or $PSAnalyzerPSD -contains "Warning") {
+    $PSAnalyzer
+    Write-Error "PSAnalyzer severity did contain Warning, please fix this and run the RSModuleBuilder again. You can se the results from PSAnalyzer above this row."
+    Break
+}
+
 if ($Publish -eq $true) {
-    # Check so that the module has .ps1 and .psd1 files in the module folder before it trys to publish it.
     Write-Verbose "Publishing $($ModuleName) version $($version) to PowerShell Gallery"
     Publish-Module -Path $ModuleFolderPath -NuGetApiKey $apiKey -Force
     Write-Output "---/// $($ModuleName) version $($Version) has now been built and published to PowerShell Gallery! ///---"
 }
 else {
-    Write-Output "---/// $($ModuleName) version $($Version)  is now prepared for publishing! ///---"
+    Write-Output "---/// $($ModuleName) version $($Version) is now prepared for publishing! ///---"
 }
