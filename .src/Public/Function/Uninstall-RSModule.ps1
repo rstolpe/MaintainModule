@@ -17,7 +17,7 @@
         Uninstall-RSModule -Module "VMWare.PowerCLI, ImportExcel"
         # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
 
-        .RELATED LINKS
+        .LINK
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES

@@ -2,40 +2,42 @@
 NAME
     Uninstall-RSModule
     
+SYNOPSIS
+    Uninstall older versions of your modules in a easy way.
+    
+    
 SYNTAX
-    Uninstall-RSModule [[-Module] <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
+    Uninstall-RSModule [[-Module] <String>] [-WhatIf] [-Confirm] [<CommonParameters>]
     
     
+DESCRIPTION
+    This script let users uninstall older versions of the modules that are installed on the system.
+    
+
 PARAMETERS
-    -Confirm
+    -Module <String>
+        Specify modules that you want to uninstall older versions from, if this is left empty all of the older versions of the systems modules will be uninstalled
         
         Required?                    false
-        Position?                    Named
+        Position?                    1
+        Default value                
         Accept pipeline input?       false
-        Parameter set name           (All)
-        Aliases                      cf
-        Dynamic?                     false
         Accept wildcard characters?  false
         
-    -Module <string>
-        Enter the module or modules (separated with ,) you want to uninstall
+    -WhatIf [<SwitchParameter>]
         
         Required?                    false
-        Position?                    0
+        Position?                    named
+        Default value                
         Accept pipeline input?       false
-        Parameter set name           (All)
-        Aliases                      None
-        Dynamic?                     false
         Accept wildcard characters?  false
         
-    -WhatIf
+    -Confirm [<SwitchParameter>]
         
         Required?                    false
-        Position?                    Named
+        Position?                    named
+        Default value                
         Accept pipeline input?       false
-        Parameter set name           (All)
-        Aliases                      wi
-        Dynamic?                     false
         Accept wildcard characters?  false
         
     <CommonParameters>
@@ -44,19 +46,42 @@ PARAMETERS
         OutBuffer, PipelineVariable, and OutVariable. For more information, see
         about_CommonParameters (https://go.microsoft.com/fwlink/?LinkID=113216). 
     
-    
 INPUTS
-    None
-    
     
 OUTPUTS
-    System.Object
     
-ALIASES
-    None
+NOTES
     
-
-REMARKS
-    None
+    
+        Author:     Robin Stolpe
+        Mail:       robin@stolpe.io
+        Website:	https://stolpe.io
+        GitHub:		https://github.com/rstolpe
+        Twitter:	https://twitter.com/rstolpes
+        PSGallery:	https://www.powershellgallery.com/profiles/rstolpe
+    
+    -------------------------- EXAMPLE 1 --------------------------
+    
+    PS > Uninstall-RSModule -Module "VMWare.PowerCLI"
+    # This will uninstall all older versions of the module VMWare.PowerCLI system.
+    
+    
+    
+    
+    
+    
+    -------------------------- EXAMPLE 2 --------------------------
+    
+    PS > Uninstall-RSModule -Module "VMWare.PowerCLI, ImportExcel"
+    # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
+    
+    
+    
+    
+    
+    
+    
+RELATED LINKS
+    https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
 

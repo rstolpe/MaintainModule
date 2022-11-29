@@ -33,7 +33,7 @@ Function Uninstall-RSModule {
         Uninstall-RSModule -Module "VMWare.PowerCLI, ImportExcel"
         # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
 
-        .RELATED LINKS
+        .LINK
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES
@@ -140,7 +140,7 @@ Function Update-RSModule {
         Update-RSModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion -ImportModule
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
 
-        .RELATED LINKS
+        .LINK
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES
@@ -157,7 +157,7 @@ Function Update-RSModule {
         [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules (separated with ,) that you want to update, if you don't enter any all of the modules will be updated")]
         [string]$Module,
         [ValidateSet("CurrentUser", "AllUsers")]
-        [Parameter(Mandatory = $true, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules")]
+        [Parameter(Mandatory = $false, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules")]
         [string]$Scope = "CurrentUser",
         [Parameter(Mandatory = $false, HelpMessage = "Import modules that has been entered in the module parameter at the end of this function")]
         [switch]$ImportModule = $false,
