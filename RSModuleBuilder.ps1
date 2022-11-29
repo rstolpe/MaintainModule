@@ -1,16 +1,15 @@
 ﻿param (
-    # Set this to true before releasing the module
     [Parameter(Mandatory = $false, HelpMessage = "Enter the version number of this release")]
     [string]$Version = "1.0.0",
-    # Fix this
     [Parameter(Mandatory = $false, HelpMessage = ".")]
     [string]$preRelease = "Alpha",
     [Parameter(Mandatory = $false, HelpMessage = "Use this switch to publish this module on PSGallery")]
     [bool]$Publish = $false,
-    # Validate so if $Publish is true this is needed
     [Parameter(Mandatory = $false, HelpMessage = "Enter API key for PSGallery")]
     [string]$apiKey
 )
+
+# THIS IS A BETA FILE OF AN OTHER FUNTION DONT USE THIS, ILL RELEASE THIS AS SOON AS POSSIBLE
 
 #Requires -Modules PSScriptAnalyzer
 Import-Module -Name EasyModuleBuild -Force
