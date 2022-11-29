@@ -114,10 +114,22 @@ Set-Content -Path $outPSDFile -Value $PSDfileContent -Force
 
 Write-Output "Running PSScriptAnalyzer on the .psd1 $($outPSDFile)..."
 # If no issue are found that should be written in the outfile
-$PSAnalyzerPSD = Invoke-ScriptAnalyzer -Path $outPSDFile -ReportSummary | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_psd1_$($TodaysDate).md")
+$PSAnalyzerPSD = Invoke-ScriptAnalyzer -Path $outPSDFile -ReportSummary
+if ($null -ne $PSAnalyzerPSD) {
+    $PSAnalyzerPSD | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_psd1_$($TodaysDate).md")
+}
+else {
+    Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_psd1_$($TodaysDate).md")
+}
 
 Write-Output "Running PSScriptAnalyzer on all .ps1 files in $($srcPublicFunctionPath)..."
-$PSAnalyzer = Invoke-ScriptAnalyzer -Path $srcPublicFunctionPath -Recurse -ReportSummary | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_ps1_$($TodaysDate).md")
+$PSAnalyzer = Invoke-ScriptAnalyzer -Path $srcPublicFunctionPath -Recurse -ReportSummary
+if ($null -ne $PSAnalyzer) {
+    $PSAnalyzer | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_ps1_$($TodaysDate).md")
+}
+else {
+    Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_ps1_$($TodaysDate).md")
+}
 
 # Import the module and save the Get-Help files to the $HelpPath for the module, files get saved in .md format
 Write-Verbose "Importing $($ModuleName) to the session..."
