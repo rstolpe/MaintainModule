@@ -55,7 +55,7 @@ $MigrateFunction = @( $(Get-ChildItem -Path $srcPublicFunctionPath/*.ps1 | Selec
 Write-Verbose "Start to migrate all functions in to the .psm1 file and collecting the function names to add in the FunctionToExport in the .psd1 file"
 foreach ($function in $MigrateFunction.FullName) {
     # Migrates all of the .ps1 files that are located in src/Function in to one .psm1 file saved in the module folder
-    $Results = [System.Management.Automation.Language.Parser]::ParseFile($function.FullName, [ref]$null, [ref]$null)
+    $Results = [System.Management.Automation.Language.Parser]::ParseFile($function, [ref]$null, [ref]$null)
     $Functions = $Results.EndBlock.Extent.Text
     $Functions | Add-Content -Path $outPSMFile
 
