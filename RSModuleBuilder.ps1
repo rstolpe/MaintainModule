@@ -1,7 +1,7 @@
 ﻿param (
     # Set this to true before releasing the module
     [Parameter(Mandatory = $false, HelpMessage = "Enter the version number of this release")]
-    [string]$Version = "0.1.6",
+    [string]$Version = "0.1.7",
     # Fix this
     [Parameter(Mandatory = $false, HelpMessage = ".")]
     [string]$preRelease = "Alpha",
@@ -36,12 +36,6 @@ $TestPath = Join-Path -Path $scriptPath -ChildPath "test"
 Write-OutPut "`n== Building module $($ModuleName) ==`n"
 Write-OutPut "Starting to build the module, please wait..."
 
-# Check so all the needed folders exists, if they don't they will get created.
-Checkpoint-RSFolderFile -ModulePath $scriptPath -ModuleName $ModuleName -New $false
-
-# Deleting existing files that will get replaced by this script
-Remove-RSContent -ModuleName $ModuleName -ScriptPath $scriptPath -ExistingModule
-
 # Adding the text from the gnu3_add_file_licens.source to the to of the .psm1 file for licensing of GNU v3
 # Let user choose between GNU 3 or MIT
 $psmLicens = Get-Content -Path "$($psmLicensPath)/gnu3_add_file_licens.source" -ErrorAction SilentlyContinue
@@ -60,7 +54,7 @@ foreach ($function in $MigrateFunction.FullName) {
     $Functions | Add-Content -Path $outPSMFile
 
     # Converting the function name to fit the .psd1 file for exporting
-    $function = $function -split "/" | Select-Object -Last 1
+    $function = $function -split "/" -replace ".ps1" | Select-Object -Last 1
     $function = """$($function)"","
     [void]($function.trim())
 
