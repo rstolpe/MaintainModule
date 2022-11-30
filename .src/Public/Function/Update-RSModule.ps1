@@ -207,5 +207,3 @@
     }
     Write-Output "`n---/// Script Finished! ///---"
 }
-
-Update-RSModule -UninstallOldVersion -Scope CurrentUser
