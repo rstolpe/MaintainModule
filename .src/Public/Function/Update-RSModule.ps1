@@ -85,7 +85,21 @@
     }
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
-        $Module = $Module.Split(",").Trim()
+        $OldModule = $Module.Split(",").Trim()
+
+        [System.Collections.ArrayList]$Module = @()
+        if ($InstallMissing -eq $false) {
+            Write-Verbose "Looking so the modules exists in the system..."
+            foreach ($m in $OldModule) {
+                if ($m -in $InstalledModules.name) {
+                    Write-Verbose "$($m) did exists in the system..."
+                    [void]($Module.Add($m))
+                }
+                else {
+                    Write-Warning "$($m) did not exists in the system, skipping this module..."
+                }
+            }
+        }
     }
 
     # Making sure that TLS 1.2 is used.
@@ -111,33 +125,35 @@
 
     # Start looping trough every module that are stored in the string Module
     foreach ($m in $Module.Split()) {
-
         Write-Verbose "Checks if $($m) are installed"
         if ($m -in $InstalledModules.Name) {
 
-            # Get all of the installed versions of the module
+            # Getting the latest installed version of the module
             Write-Verbose "Collecting all installed version of $($m)..."
-            $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+            $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version
+            [version]$LatestInstalledVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
 
-            # Collects the latest version of module
-            Write-Verbose "Looking up the latest version of $($m)..."
-            $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
+            # Collects the latest version of module from the source where the module was installed from
+            Write-Output "Looking up the latest version of $($m)..."
+            [version]$CollectLatestVersion = $(Find-Module -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version -First 1).version
 
-            # Looking if the version of the module are the latest version
-            if ($GetAllInstalledVersions.Version -lt $CollectLatestVersion.Version) {
+            # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
+            if ($LatestInstalledVersion -lt $CollectLatestVersion) {
                 try {
-                    Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
-                    Write-Output "Updating $($m) to version $($CollectLatestVersion.Version)..."
+                    Write-Output "Found a newer version of $($m), version $($CollectLatestVersion)"
+                    Write-Output "Updating $($m) from $($LatestInstalledVersion) to version $($CollectLatestVersion)..."
                     Update-Module -Name $($m) -Scope $Scope -Force
-                    Write-Output "$($m) has been updated to version $($CollectLatestVersion.Version)!"
+                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion)!`n"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
                     continue
                 }
+            }
 
-                # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
-                if ($UninstallOldVersion -eq $true) {
+            # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
+            if ($UninstallOldVersion -eq $true) {
+                if ($GetAllInstalledVersions.Count -gt 1) {
                     Uninstall-RSModule -Module $m
                 }
             }
@@ -191,3 +207,5 @@
     }
     Write-Output "`n---/// Script Finished! ///---"
 }
+
+Update-RSModule -UninstallOldVersion -Scope CurrentUser
