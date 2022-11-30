@@ -38,16 +38,29 @@
     Write-Output "`n=== Starting to uninstall older versions of modules ===`n"
     Write-Output "Please wait, this can take some time..."
 
+    Write-Verbose "Caching all installed modules from the system..."
+    $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
+
     # If Module parameter is empty populate it with all modules that are installed on the system
     if ([string]::IsNullOrEmpty($Module)) {
-        Write-Verbose "Caching all installed modules from the system..."
-        $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
         Write-Verbose "Parameter Module are empty populate it with all installed modules from the system..."
         $Module = $InstalledModules.Name
     }
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
-        $Module = $Module.Split(",").Trim()
+        $OldModule = $Module.Split(",").Trim()
+
+        [System.Collections.ArrayList]$Module = @()
+        Write-Verbose "Looking so the modules exists in the system..."
+        foreach ($m in $OldModule) {
+            if ($m -in $InstalledModules.name) {
+                Write-Verbose "$($m) did exists in the system..."
+                [void]($Module.Add($m))
+            }
+            else {
+                Write-Warning "$($m) did not exists in the system, skipping this module..."
+            }
+        }
     }
 
     foreach ($m in $Module.Split()) {

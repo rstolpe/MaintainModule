@@ -54,7 +54,6 @@ Function Uninstall-RSModule {
     Write-Output "`n=== Starting to uninstall older versions of modules ===`n"
     Write-Output "Please wait, this can take some time..."
 
-    # Collect all installed modules from the system
     Write-Verbose "Caching all installed modules from the system..."
     $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
 
@@ -65,7 +64,19 @@ Function Uninstall-RSModule {
     }
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
-        $Module = $Module.Split(",").Trim()
+        $OldModule = $Module.Split(",").Trim()
+
+        [System.Collections.ArrayList]$Module = @()
+        Write-Verbose "Looking so the modules exists in the system..."
+        foreach ($m in $OldModule) {
+            if ($m -in $InstalledModules.name) {
+                Write-Verbose "$($m) did exists in the system..."
+                [void]($Module.Add($m))
+            }
+            else {
+                Write-Warning "$($m) did not exists in the system, skipping this module..."
+            }
+        }
     }
 
     foreach ($m in $Module.Split()) {
@@ -183,6 +194,7 @@ Function Update-RSModule {
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
         $OldModule = $Module.Split(",").Trim()
+
         [System.Collections.ArrayList]$Module = @()
         if ($InstallMissing -eq $false) {
             Write-Verbose "Looking so the modules exists in the system..."
@@ -234,7 +246,7 @@ Function Update-RSModule {
             $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
-            if ($GetLatestInstalledVersions.Version -lt $CollectLatestVersion.Version) {
+            if ([version]$GetLatestInstalledVersions.Version -lt [version]$CollectLatestVersion.Version) {
                 try {
                     Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
                     Write-Output "Updating $($m) from $($GetLatestInstalledVersions.Version) to version $($CollectLatestVersion.Version)..."

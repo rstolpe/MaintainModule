@@ -1,7 +1,7 @@
 ﻿param (
     # Set this to true before releasing the module
     [Parameter(Mandatory = $false, HelpMessage = "Enter the version number of this release")]
-    [string]$Version = "0.1.1",
+    [string]$Version = "0.1.2",
     # Fix this
     [Parameter(Mandatory = $false, HelpMessage = ".")]
     [string]$preRelease = "Alpha",

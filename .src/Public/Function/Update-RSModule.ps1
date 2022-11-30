@@ -86,6 +86,7 @@
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
         $OldModule = $Module.Split(",").Trim()
+
         [System.Collections.ArrayList]$Module = @()
         if ($InstallMissing -eq $false) {
             Write-Verbose "Looking so the modules exists in the system..."
@@ -137,7 +138,7 @@
             $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
-            if ($GetLatestInstalledVersions.Version -lt $CollectLatestVersion.Version) {
+            if ([version]$GetLatestInstalledVersions.Version -lt [version]$CollectLatestVersion.Version) {
                 try {
                     Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
                     Write-Output "Updating $($m) from $($GetLatestInstalledVersions.Version) to version $($CollectLatestVersion.Version)..."
