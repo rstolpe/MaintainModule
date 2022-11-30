@@ -54,7 +54,7 @@
 
     foreach ($m in $Module.Split()) {
         Write-Verbose "Collecting all installed version of the module $($m)"
-        $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+        $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object Version -Descending
 
         # If the module has more then one version loop trough the versions and only keep the most current one
         if ($GetAllInstalledVersions.Count -gt 1) {

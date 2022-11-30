@@ -1,15 +1,16 @@
 ﻿param (
+    # Set this to true before releasing the module
     [Parameter(Mandatory = $false, HelpMessage = "Enter the version number of this release")]
-    [string]$Version = "1.0.0",
+    [string]$Version = "1.0.1",
+    # Fix this
     [Parameter(Mandatory = $false, HelpMessage = ".")]
     [string]$preRelease = "Alpha",
     [Parameter(Mandatory = $false, HelpMessage = "Use this switch to publish this module on PSGallery")]
     [bool]$Publish = $false,
+    # Validate so if $Publish is true this is needed
     [Parameter(Mandatory = $false, HelpMessage = "Enter API key for PSGallery")]
     [string]$apiKey
 )
-
-# THIS IS A BETA FILE OF AN OTHER FUNTION DONT USE THIS, ILL RELEASE THIS AS SOON AS POSSIBLE
 
 #Requires -Modules PSScriptAnalyzer
 Import-Module -Name EasyModuleBuild -Force
@@ -25,12 +26,12 @@ $HelpPath = Join-Path -Path $scriptPath -ChildPath "help"
 $ModuleFolderPath = Join-Path -Path $scriptPath -ChildPath $ModuleName
 $srcPath = Join-Path -Path $scriptPath -ChildPath ".src"
 $srcPublicFunctionPath = Join-Path -Path $srcPath -ChildPath "public/function"
+$srcPrivateFunctionPath = Join-Path -Path $srcPath -ChildPath "private/function"
 $outPSMFile = Join-Path -Path $ModuleFolderPath -ChildPath "$($ModuleName).psm1"
 $outPSDFile = Join-Path -Path $ModuleFolderPath -ChildPath "$($ModuleName).psd1"
 $psdTemplate = Join-Path -Path $srcPath -ChildPath "$($ModuleName).psd1.source"
 $psmLicensPath = Join-Path -Path $srcPath -ChildPath "License"
 $TestPath = Join-Path -Path $scriptPath -ChildPath "test"
-#$EMBSourceFiles = "$($env:PSModulePath)/EasyModuleBuild/source_files"
 
 Write-OutPut "`n== Building module $($ModuleName) ==`n"
 Write-OutPut "Starting to build the module, please wait..."
@@ -42,23 +43,24 @@ Checkpoint-RSFolderFile -ModulePath $scriptPath -ModuleName $ModuleName -New $fa
 Remove-RSContent -ModuleName $ModuleName -ScriptPath $scriptPath -ExistingModule
 
 # Adding the text from the gnu3_add_file_licens.source to the to of the .psm1 file for licensing of GNU v3
+# Let user choose between GNU 3 or MIT
 $psmLicens = Get-Content -Path "$($psmLicensPath)/gnu3_add_file_licens.source" -ErrorAction SilentlyContinue
 $psmLicens | Add-Content -Path $outPSMFile
 
-# Collecting all .ps1 files that are located in src/function folders
-Write-Verbose "Collecting all .ps1 files from $($srcPublicFunctionPath)"
-$MigrateFunction = @( Get-ChildItem -Path $srcPublicFunctionPath/*.ps1 -ErrorAction SilentlyContinue -Recurse )
+# Collecting all .ps1 files that are located in .src private/function and public/function folders
+Write-Verbose "Collecting all .ps1 files from $($srcPublicFunctionPath) and $($srcPrivateFunctionPath)"
+$MigrateFunction = @( $(Get-ChildItem -Path $srcPublicFunctionPath/*.ps1 | Select-Object FullName, Name -ErrorAction SilentlyContinue), $(Get-ChildItem -Path $srcPrivateFunctionPath/*.ps1 | Select-Object FullName, Name -ErrorAction SilentlyContinue) )
 
 # Looping trough the .ps1 files and migrating them to one singel .psm1 file and saving it in the module folder
 Write-Verbose "Start to migrate all functions in to the .psm1 file and collecting the function names to add in the FunctionToExport in the .psd1 file"
-foreach ($function in $MigrateFunction) {
+foreach ($function in $MigrateFunction.FullName) {
     # Migrates all of the .ps1 files that are located in src/Function in to one .psm1 file saved in the module folder
-    $Results = [System.Management.Automation.Language.Parser]::ParseFile($function, [ref]$null, [ref]$null)
+    $Results = [System.Management.Automation.Language.Parser]::ParseFile($function.FullName, [ref]$null, [ref]$null)
     $Functions = $Results.EndBlock.Extent.Text
     $Functions | Add-Content -Path $outPSMFile
 
     # Converting the function name to fit the .psd1 file for exporting
-    $function = $function.Name -replace ".ps1"
+    $function = $function -split "/" | Select-Object -Last 1
     $function = """$($function)"","
     [void]($function.trim())
 
@@ -68,6 +70,8 @@ foreach ($function in $MigrateFunction) {
 
 # if $MigrateFunction are not empty remove the last , from the $FunctionPSD ArrayList
 if ($null -ne $MigrateFunction) {
+    # I know that I need to fix this one, but it's the best I can think of for now to remove the last , in the ArrayList
+    # Bug! If the module only contain one function the , after the name are not removed, need to remove that
     $FunctionPSD = $FunctionPSD | ForEach-Object {
         if ( $FunctionPSD.IndexOf($_) -eq ($FunctionPSD.count - 1) ) {
             $_.replace(",", "")
@@ -96,6 +100,7 @@ Copy-Item -Path $psdTemplate -Destination $outPSDFile -Force
 Write-Verbose "Getting the content from file $($outPSDFile)"
 $PSDfileContent = Get-Content -Path $outPSDFile
 
+# Can I do a loop here? I just might :) remember to check if the varible is empty or not
 # Changing version, preReleaseTag and function in the .psd1 file
 Write-Verbose "Replacing the placeholders in the $($outPSDFile) file"
 $PSDfileContent = $PSDfileContent -replace '{{manifestDate}}', $TodaysDate
@@ -115,27 +120,33 @@ else {
 Write-Verbose "Setting the placeholders for $($outPSDFile)"
 Set-Content -Path $outPSDFile -Value $PSDfileContent -Force
 
-foreach ($ps1 in $MigrateFunction) {
-    Write-Output "Running PSScriptAnalyzer on $($ps1)..."
+Write-Output "Running PSScriptAnalyzer on $($MigrateFunction.name)..."
+$ResultPS1 = foreach ($ps1 in $MigrateFunction.FullName) {
+    $ps1Name = $ps1 -split "/" -replace ".ps1" | Select-Object -Last 1
+    Write-Verbose "Running PSScriptAnalyzer on $($ps1Name).ps1..."
     $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
     if ($null -ne $PSAnalyzerPS1) {
-        $PSAnalyzerPS1 | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1.Name)_$($TodaysDate).md")
+        $PSAnalyzerPS1 | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
     }
     else {
-        Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1.Name)_$($TodaysDate).md")
+        Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
     }
+    $PSAnalyzerPS1
 }
 
+Write-Output "Running PSScriptAnalyzer on $($outPSDFile) and $($outPSMFile)..."
 $CheckPSA = @($outPSDFile, $outPSMFile)
-foreach ($file in $CheckPSA) {
-    Write-Output "Running PSScriptAnalyzer on the $($file)"
+$ResultPSDPSM = foreach ($file in $CheckPSA) {
+    $psdPSMName = $file -split "/" | Select-Object -Last 1
+    Write-Verbose "Running PSScriptAnalyzer on $($psdPSMName)..."
     $PSAnalyzer = Invoke-ScriptAnalyzer -Path $file -ReportSummary
     if ($null -ne $PSAnalyzer) {
-        $PSAnalyzer | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($file -split "/" | Select-Object -Last 1)_$($TodaysDate).md")
+        $PSAnalyzer | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($psdPSMName)_$($TodaysDate).md")
     }
     else {
-        Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($file -split "/" | Select-Object -Last 1)_$($TodaysDate).md")
+        Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($psdPSMName)_$($TodaysDate).md")
     }
+    $PSAnalyzer
 }
 
 # Import the module and save the Get-Help files to the $HelpPath for the module, files get saved in .md format
@@ -151,11 +162,16 @@ foreach ($m in $mCommands) {
     }
 }
 
-if ($PSAnalyzer.Severity -contains "Warning" -or $PSAnalyzerPS1 -contains "Warning") {
-    $PSAnalyzer
-    Write-Error "PSAnalyzer severity did contain Warning, please fix this and run the RSModuleBuilder again. You can se the results from PSAnalyzer above this row."
+Write-Output "`n== Summery of PSScriptAnalyzer =="
+$ResultPS1
+$ResultPSDPSM
+
+if ($ResultPS1.Severity -contains "Warning" -or $ResultPSM.Severity -contains "Warning") {
+    Write-Error "PSAnalyzer severity did contain Warning, please fix this and run the RSModuleBuilder again. You can se the results from PSScriptAnalyzer below."
     Break
 }
+
+# Add so it check if it has any other flags in the analyzer then just inform about it.
 
 if ($Publish -eq $true) {
     Write-Verbose "Publishing $($ModuleName) version $($version) to PowerShell Gallery"
