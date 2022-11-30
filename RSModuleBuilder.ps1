@@ -1,7 +1,7 @@
 ﻿param (
     # Set this to true before releasing the module
     [Parameter(Mandatory = $false, HelpMessage = "Enter the version number of this release")]
-    [string]$Version = "0.2.0",
+    [string]$Version = "0.0.8",
     # Fix this
     [Parameter(Mandatory = $false, HelpMessage = ".")]
     [string]$preRelease = "Alpha",
@@ -145,9 +145,9 @@ $ResultPSDPSM = foreach ($file in $CheckPSA) {
 
 # Import the module and save the Get-Help files to the $HelpPath for the module, files get saved in .md format
 Write-Verbose "Importing $($ModuleName) to the session..."
-Import-Module -Name $($ModuleFolderPath) -MinimumVersion $Version -Force
+Import-Module -Name $ModuleFolderPath -MinimumVersion $Version -Force
 
-Write-Verbose "Writing $($ModuleName) functions to help files in $($HelpPath)..."
+#Write-Verbose "Writing $($ModuleName) functions to help files in $($HelpPath)..."
 $mCommands = Get-Command -Module $ModuleName
 foreach ($m in $mCommands) {
     if ($null -ne $m) {
