@@ -1,5 +1,5 @@
 ﻿Function Update-RSModule {
-    <#        
+    <#
         .SYNOPSIS
         This module let you maintain your installed modules in a easy way.
 
@@ -13,7 +13,7 @@
         .PARAMETER Scope
         Need to specify scope of the installation/update for the module, either AllUsers or CurrentUser. Default is CurrentUser.
         If this parameter is empty it will use CurrentUser
-        The parameter -Scope don't effect the uninstall-module function this is because of limitation from Microsoft.  
+        The parameter -Scope don't effect the uninstall-module function this is because of limitation from Microsoft.
         - Scope effect Install/update module function.
 
         .PARAMETER ImportModule
@@ -42,7 +42,7 @@
         Update-RSModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion -ImportModule
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
 
-        .RELATED LINKS
+        .LINK
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES
@@ -58,8 +58,8 @@
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules (separated with ,) that you want to update, if you don't enter any all of the modules will be updated")]
         [string]$Module,
-        [ValidateSet("CurrentUser", "AllUsers")] 
-        [Parameter(Mandatory = $true, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules")]
+        [ValidateSet("CurrentUser", "AllUsers")]
+        [Parameter(Mandatory = $false, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules")]
         [string]$Scope = "CurrentUser",
         [Parameter(Mandatory = $false, HelpMessage = "Import modules that has been entered in the module parameter at the end of this function")]
         [switch]$ImportModule = $false,
@@ -85,7 +85,21 @@
     }
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
-        $Module = $Module.Split(",").Trim()
+        $OldModule = $Module.Split(",").Trim()
+
+        [System.Collections.ArrayList]$Module = @()
+        if ($InstallMissing -eq $false) {
+            Write-Verbose "Looking so the modules exists in the system..."
+            foreach ($m in $OldModule) {
+                if ($m -in $InstalledModules.name) {
+                    Write-Verbose "$($m) did exists in the system..."
+                    [void]($Module.Add($m))
+                }
+                else {
+                    Write-Warning "$($m) did not exists in the system, skipping this module..."
+                }
+            }
+        }
     }
 
     # Making sure that TLS 1.2 is used.
@@ -111,33 +125,35 @@
 
     # Start looping trough every module that are stored in the string Module
     foreach ($m in $Module.Split()) {
-
         Write-Verbose "Checks if $($m) are installed"
         if ($m -in $InstalledModules.Name) {
 
-            # Get all of the installed versions of the module
+            # Getting the latest installed version of the module
             Write-Verbose "Collecting all installed version of $($m)..."
-            $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+            $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version
+            [version]$LatestInstalledVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
 
-            # Collects the latest version of module
-            Write-Verbose "Looking up the latest version of $($m)..."
-            $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
+            # Collects the latest version of module from the source where the module was installed from
+            Write-Output "Looking up the latest version of $($m)..."
+            [version]$CollectLatestVersion = $(Find-Module -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version -First 1).version
 
-            # Looking if the version of the module are the latest version
-            if ($GetAllInstalledVersions.Version -lt $CollectLatestVersion.Version) {
+            # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
+            if ($LatestInstalledVersion -lt $CollectLatestVersion) {
                 try {
-                    Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
-                    Write-Output "Updating $($m) to version $($CollectLatestVersion.Version)..."
+                    Write-Output "Found a newer version of $($m), version $($CollectLatestVersion)"
+                    Write-Output "Updating $($m) from $($LatestInstalledVersion) to version $($CollectLatestVersion)..."
                     Update-Module -Name $($m) -Scope $Scope -Force
-                    Write-Output "$($m) has been updated to version $($CollectLatestVersion.Version)!"
+                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion)!`n"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
                     continue
                 }
+            }
 
-                # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
-                if ($UninstallOldVersion -eq $true) {
+            # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
+            if ($UninstallOldVersion -eq $true) {
+                if ($GetAllInstalledVersions.Count -gt 1) {
                     Uninstall-RSModule -Module $m
                 }
             }
@@ -168,7 +184,7 @@
             # Collect all of the imported modules.
             Write-Verbose "Collecting all of the installed modules..."
             $ImportedModules = Get-Module | Select-Object Name, Version
-    
+
             # Import module if it's not imported
             Write-Verbose "Starting to import the modules..."
             foreach ($m in $Module.Split()) {

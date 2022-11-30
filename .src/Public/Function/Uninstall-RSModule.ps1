@@ -17,7 +17,7 @@
         Uninstall-RSModule -Module "VMWare.PowerCLI, ImportExcel"
         # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
 
-        .RELATED LINKS
+        .LINK
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES
@@ -38,7 +38,6 @@
     Write-Output "`n=== Starting to uninstall older versions of modules ===`n"
     Write-Output "Please wait, this can take some time..."
 
-    # Collect all installed modules from the system
     Write-Verbose "Caching all installed modules from the system..."
     $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
 
@@ -49,33 +48,45 @@
     }
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
-        $Module = $Module.Split(",").Trim()
+        $OldModule = $Module.Split(",").Trim()
+
+        [System.Collections.ArrayList]$Module = @()
+        Write-Verbose "Looking so the modules exists in the system..."
+        foreach ($m in $OldModule) {
+            if ($m -in $InstalledModules.name) {
+                Write-Verbose "$($m) did exists in the system..."
+                [void]($Module.Add($m))
+            }
+            else {
+                Write-Warning "$($m) did not exists in the system, skipping this module..."
+            }
+        }
     }
 
     foreach ($m in $Module.Split()) {
         Write-Verbose "Collecting all installed version of the module $($m)"
-        $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+        $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -ExpandProperty Version
 
         # If the module has more then one version loop trough the versions and only keep the most current one
         if ($GetAllInstalledVersions.Count -gt 1) {
-            $MostRecentVersion = $GetAllInstalledVersions[0].Version
-            Foreach ($Version in $GetAllInstalledVersions.Version) {
-                if ($Version -ne $MostRecentVersion) {
-                    try {
-                        Write-Output "Uninstalling previous version $($Version) of module $($m)..."
-                        Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                        Write-Output "Version $($Version) of $($m) are now uninstalled!"
-                    }
-                    catch {
-                        Write-Error "$($PSItem.Exception)"
-                        continue
-                    }
+            $MostRecentVersion = $null
+            [version]$MostRecentVersion = $GetAllInstalledVersions[0]
+            Foreach ($Version in $GetAllInstalledVersions | Where-Object { [version]$_ -lt [version]$MostRecentVersion }) {
+                try {
+                    Write-Output "Uninstalling previous version $($Version) of module $($m)..."
+                    Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
+                    Write-Output "Version $($Version) of $($m) are now uninstalled!"
+                }
+                catch {
+                    Write-Error "$($PSItem.Exception)"
+                    continue
                 }
             }
+            # bygga in en check så att den verkligen kan verifiera detta
             Write-Output "All older versions of $($m) are now uninstalled, the only installed version of $($m) is $($MostRecentVersion)"
         }
         else {
-            Write-Verbose "$($m) don't have any older versions installed then the most current one, no need to uninstall anything."
+            Write-Verbose "$($m) don't have any older versions installed then $($GetAllInstalledVersions), no need to uninstall anything."
         }
     }
     Write-Output "`n---/// Script Finished! ///---"
