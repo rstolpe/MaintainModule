@@ -60,7 +60,7 @@
         if ($GetAllInstalledVersions.Count -gt 1) {
             $MostRecentVersion = $GetAllInstalledVersions[0].Version
             Foreach ($Version in $GetAllInstalledVersions.Version) {
-                if ($Version -ne $MostRecentVersion) {
+                if ($Version -lt $MostRecentVersion) {
                     try {
                         Write-Output "Uninstalling previous version $($Version) of module $($m)..."
                         Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
@@ -75,7 +75,7 @@
             Write-Output "All older versions of $($m) are now uninstalled, the only installed version of $($m) is $($MostRecentVersion)"
         }
         else {
-            Write-Verbose "$($m) don't have any older versions installed then the most current one, no need to uninstall anything."
+            Write-Verbose "$($m) don't have any older versions installed then $($GetAllInstalledVersions.Version), no need to uninstall anything."
         }
     }
     Write-Output "`n---/// Script Finished! ///---"
