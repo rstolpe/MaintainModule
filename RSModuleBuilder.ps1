@@ -90,7 +90,7 @@ Write-Verbose "Replacing the placeholders in the $($outPSMFile) file"
 $PSMfileContent = $PSMfileContent -replace '{{year}}', $year
 
 Write-Verbose "Setting the placeholders for $($outPSMFile)"
-Set-Content -Path $outPSMFile -Value $PSMfileContent -Force
+Set-Content -Path $outPSMFile -Value $PSMfileContent -Encoding utf8BOM -Force
 
 # Copy the .psd1.source file from the srcPath to the module folder and removing the .source ending
 Write-Verbose "Copy the file $($psdTemplate) to $($outPSDFile)"
@@ -118,7 +118,7 @@ else {
 }
 
 Write-Verbose "Setting the placeholders for $($outPSDFile)"
-Set-Content -Path $outPSDFile -Value $PSDfileContent -Force
+Set-Content -Path $outPSDFile -Value $PSDfileContent -Encoding utf8BOM -Force
 
 Write-Output "Running PSScriptAnalyzer on $($MigrateFunction.name)..."
 $ResultPS1 = foreach ($ps1 in $MigrateFunction.FullName) {
