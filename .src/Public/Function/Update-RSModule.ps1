@@ -139,7 +139,7 @@
             $CollectLatestVersion = Find-Module -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -First 1
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
-            if ([version]$MostRecentVersion -lt [version]$CollectLatestVersion.Version) {
+            if ([version]$MostRecentVersion -lt $CollectLatestVersion.Version) {
                 try {
                     Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
                     Write-Output "Updating $($m) from $($MostRecentVersion) to version $($CollectLatestVersion.Version)..."
