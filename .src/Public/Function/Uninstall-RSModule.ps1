@@ -38,12 +38,10 @@
     Write-Output "`n=== Starting to uninstall older versions of modules ===`n"
     Write-Output "Please wait, this can take some time..."
 
-    # Collect all installed modules from the system
-    Write-Verbose "Caching all installed modules from the system..."
-    $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
-
     # If Module parameter is empty populate it with all modules that are installed on the system
     if ([string]::IsNullOrEmpty($Module)) {
+        Write-Verbose "Caching all installed modules from the system..."
+        $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
         Write-Verbose "Parameter Module are empty populate it with all installed modules from the system..."
         $Module = $InstalledModules.Name
     }
