@@ -126,6 +126,7 @@
     # Start looping trough every module that are stored in the string Module
     foreach ($m in $Module.Split()) {
         Write-Verbose "Checks if $($m) are installed"
+        $MostRecentVersion = $null
         if ($m -in $InstalledModules.Name) {
 
             # Getting the latest installed version of the module
