@@ -125,23 +125,23 @@
 
     # Start looping trough every module that are stored in the string Module
     foreach ($m in $Module.Split()) {
-
         Write-Verbose "Checks if $($m) are installed"
         if ($m -in $InstalledModules.Name) {
 
             # Getting the latest installed version of the module
             Write-Verbose "Collecting all installed version of $($m)..."
-            $GetLatestInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -First 1
+            $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -ExpandProperty Version
+            [version]$MostRecentVersion = $GetAllInstalledVersions[0]
 
             # Collects the latest version of module from the source where the module was installed from
             Write-Verbose "Looking up the latest version of $($m)..."
             $CollectLatestVersion = Find-Module -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -First 1
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
-            if ([version]$GetLatestInstalledVersions.Version -lt [version]$CollectLatestVersion.Version) {
+            if ([version]$MostRecentVersion -lt [version]$CollectLatestVersion.Version) {
                 try {
                     Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
-                    Write-Output "Updating $($m) from $($GetLatestInstalledVersions.Version) to version $($CollectLatestVersion.Version)..."
+                    Write-Output "Updating $($m) from $($MostRecentVersion) to version $($CollectLatestVersion.Version)..."
                     Update-Module -Name $($m) -Scope $Scope -Force
                     Write-Output "$($m) has now been updated to version $($CollectLatestVersion.Version)!`n"
                 }
@@ -153,7 +153,9 @@
 
             # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
             if ($UninstallOldVersion -eq $true) {
-                Uninstall-RSModule -Module $m
+                if ($GetAllInstalledVersions.Count -gt 1) {
+                    Uninstall-RSModule -Module $m
+                }
             }
             else {
                 Write-Verbose "$($m) already has the newest version installed, no need to install anything!"
