@@ -70,7 +70,7 @@
         # If the module has more then one version loop trough the versions and only keep the most current one
         if ([version]$GetAllInstalledVersions.Version.Count -gt 1) {
             [version]$MostRecentVersion = $GetAllInstalledVersions[0].Version
-            Foreach ($Version in [version]$GetAllInstalledVersions.Version | Where-Object { [version]$_.version -lt $MostRecentVersion }) {
+            Foreach ($Version in [version]$GetAllInstalledVersions.Version | Where-Object { [version]$_.Version -lt [version]$MostRecentVersion }) {
                 try {
                     Write-Output "Uninstalling previous version $($Version) of module $($m)..."
                     Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
