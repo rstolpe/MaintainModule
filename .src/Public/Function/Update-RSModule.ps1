@@ -126,25 +126,24 @@
     # Start looping trough every module that are stored in the string Module
     foreach ($m in $Module.Split()) {
         Write-Verbose "Checks if $($m) are installed"
-        $MostRecentVersion = $null
         if ($m -in $InstalledModules.Name) {
 
             # Getting the latest installed version of the module
             Write-Verbose "Collecting all installed version of $($m)..."
-            $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -ExpandProperty Version
-            [version]$MostRecentVersion = $GetAllInstalledVersions[0]
+            $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version
+            [version]$LatestInstalledVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
 
             # Collects the latest version of module from the source where the module was installed from
-            Write-Verbose "Looking up the latest version of $($m)..."
-            $CollectLatestVersion = Find-Module -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -First 1
+            Write-Output "Looking up the latest version of $($m)..."
+            [version]$CollectLatestVersion = $(Find-Module -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version -First 1).version
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
-            if ([version]$MostRecentVersion -lt $CollectLatestVersion.Version) {
+            if ($LatestInstalledVersion -lt $CollectLatestVersion) {
                 try {
-                    Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
-                    Write-Output "Updating $($m) from $($MostRecentVersion) to version $($CollectLatestVersion.Version)..."
+                    Write-Output "Found a newer version of $($m), version $($CollectLatestVersion)"
+                    Write-Output "Updating $($m) from $($LatestInstalledVersion) to version $($CollectLatestVersion)..."
                     Update-Module -Name $($m) -Scope $Scope -Force
-                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion.Version)!`n"
+                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion)!`n"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -208,3 +207,5 @@
     }
     Write-Output "`n---/// Script Finished! ///---"
 }
+
+Update-RSModule -UninstallOldVersion -Scope CurrentUser
