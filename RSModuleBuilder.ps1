@@ -1,7 +1,7 @@
 ﻿param (
     # Set this to true before releasing the module
     [Parameter(Mandatory = $false, HelpMessage = "Enter the version number of this release")]
-    [string]$Version = "0.0.8",
+    [string]$Version = "0.0.9",
     # Fix this
     [Parameter(Mandatory = $false, HelpMessage = ".")]
     [string]$preRelease = "Alpha",
@@ -35,6 +35,12 @@ $TestPath = Join-Path -Path $scriptPath -ChildPath "test"
 
 Write-OutPut "`n== Building module $($ModuleName) ==`n"
 Write-OutPut "Starting to build the module, please wait..."
+
+# Check so all the needed folders exists, if they don't they will get created.
+Checkpoint-RSFolderFile -ModulePath $scriptPath -ModuleName $ModuleName -New $false
+
+# Deleting existing files that will get replaced by this script
+Remove-RSContent -ModuleName $ModuleName -ScriptPath $scriptPath -ExistingModule
 
 # Adding the text from the gnu3_add_file_licens.source to the to of the .psm1 file for licensing of GNU v3
 # Let user choose between GNU 3 or MIT
@@ -145,9 +151,9 @@ $ResultPSDPSM = foreach ($file in $CheckPSA) {
 
 # Import the module and save the Get-Help files to the $HelpPath for the module, files get saved in .md format
 Write-Verbose "Importing $($ModuleName) to the session..."
-Import-Module -Name $ModuleFolderPath -MinimumVersion $Version -Force
+Import-Module -Name $($ModuleFolderPath) -MinimumVersion $Version -Force
 
-#Write-Verbose "Writing $($ModuleName) functions to help files in $($HelpPath)..."
+Write-Verbose "Writing $($ModuleName) functions to help files in $($HelpPath)..."
 $mCommands = Get-Command -Module $ModuleName
 foreach ($m in $mCommands) {
     if ($null -ne $m) {
