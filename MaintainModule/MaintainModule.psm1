@@ -73,7 +73,7 @@ Function Uninstall-RSModule {
         $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object Version -Descending
 
         # If the module has more then one version loop trough the versions and only keep the most current one
-        if ($GetAllInstalledVersions.Count -gt 1) {
+        if ($GetAllInstalledVersions.Version.Count -gt 1) {
             $MostRecentVersion = $GetAllInstalledVersions[0].Version
             Foreach ($Version in $GetAllInstalledVersions.Version) {
                 if ($Version -lt $MostRecentVersion) {
@@ -240,7 +240,7 @@ Function Update-RSModule {
                     Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
                     Write-Output "Updating $($m) from $($GetLatestInstalledVersions.Version) to version $($CollectLatestVersion.Version)..."
                     Update-Module -Name $($m) -Scope $Scope -Force
-                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion.Version)!"
+                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion.Version)!`n"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
