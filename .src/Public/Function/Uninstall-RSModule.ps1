@@ -57,21 +57,20 @@
         $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object Version -Descending
 
         # If the module has more then one version loop trough the versions and only keep the most current one
-        if ($GetAllInstalledVersions.Version.Count -gt 1) {
-            $MostRecentVersion = $GetAllInstalledVersions[0].Version
-            Foreach ($Version in $GetAllInstalledVersions.Version) {
-                if ($Version -lt $MostRecentVersion) {
-                    try {
-                        Write-Output "Uninstalling previous version $($Version) of module $($m)..."
-                        Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                        Write-Output "Version $($Version) of $($m) are now uninstalled!"
-                    }
-                    catch {
-                        Write-Error "$($PSItem.Exception)"
-                        continue
-                    }
+        if ([version]$GetAllInstalledVersions.Version.Count -gt 1) {
+            [version]$MostRecentVersion = $GetAllInstalledVersions[0].Version
+            Foreach ($Version in [version]$GetAllInstalledVersions.Version | Where-Object { [version]$_.version -lt $MostRecentVersion }) {
+                try {
+                    Write-Output "Uninstalling previous version $($Version) of module $($m)..."
+                    Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
+                    Write-Output "Version $($Version) of $($m) are now uninstalled!"
+                }
+                catch {
+                    Write-Error "$($PSItem.Exception)"
+                    continue
                 }
             }
+            # bygga in en check så att den verkligen kan verifiera detta
             Write-Output "All older versions of $($m) are now uninstalled, the only installed version of $($m) is $($MostRecentVersion)"
         }
         else {
