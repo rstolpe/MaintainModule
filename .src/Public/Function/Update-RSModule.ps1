@@ -130,19 +130,19 @@
 
             # Get all of the installed versions of the module
             Write-Verbose "Collecting all installed version of $($m)..."
-            $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object PublishedDate -Descending
+            $GetLatestInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object Version -Descending | Select-Object Version -First 1
 
             # Collects the latest version of module
             Write-Verbose "Looking up the latest version of $($m)..."
             $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
 
             # Looking if the version of the module are the latest version
-            if ($GetAllInstalledVersions.Version -lt $CollectLatestVersion.Version) {
+            if ($GetLatestInstalledVersions.Version -lt $CollectLatestVersion.Version) {
                 try {
                     Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
-                    Write-Output "Updating $($m) to version $($CollectLatestVersion.Version)..."
+                    Write-Output "Updating $($m) from $($GetLatestInstalledVersions.Version) to version $($CollectLatestVersion.Version)..."
                     Update-Module -Name $($m) -Scope $Scope -Force
-                    Write-Output "$($m) has been updated to version $($CollectLatestVersion.Version)!"
+                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion.Version)!"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -150,9 +150,9 @@
                 }
 
                 # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
-                if ($UninstallOldVersion -eq $true) {
-                    Uninstall-RSModule -Module $m
-                }
+            }
+            if ($UninstallOldVersion -eq $true) {
+                Uninstall-RSModule -Module $m
             }
             else {
                 Write-Verbose "$($m) already has the newest version installed, no need to install anything!"
