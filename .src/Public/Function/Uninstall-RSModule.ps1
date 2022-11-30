@@ -57,7 +57,7 @@
         $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object Version -Descending
 
         # If the module has more then one version loop trough the versions and only keep the most current one
-        if ($GetAllInstalledVersions.Count -gt 1) {
+        if ($GetAllInstalledVersions.Version.Count -gt 1) {
             $MostRecentVersion = $GetAllInstalledVersions[0].Version
             Foreach ($Version in $GetAllInstalledVersions.Version) {
                 if ($Version -lt $MostRecentVersion) {

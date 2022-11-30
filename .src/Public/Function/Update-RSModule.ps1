@@ -142,7 +142,7 @@
                     Write-Output "Found a newer version of $($m), version $($CollectLatestVersion.Version)"
                     Write-Output "Updating $($m) from $($GetLatestInstalledVersions.Version) to version $($CollectLatestVersion.Version)..."
                     Update-Module -Name $($m) -Scope $Scope -Force
-                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion.Version)!"
+                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion.Version)!`n"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
