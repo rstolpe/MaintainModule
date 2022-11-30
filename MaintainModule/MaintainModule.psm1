@@ -183,7 +183,20 @@ Function Update-RSModule {
     }
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
-        $Module = $Module.Split(",").Trim()
+        $OldModule = $Module.Split(",").Trim()
+        [System.Collections.ArrayList]$Module = @()
+        if ($InstallMissing -eq $false) {
+            Write-Verbose "Looking so the modules exists in the system..."
+            foreach ($m in $OldModule) {
+                if ($m -in $InstalledModules.name) {
+                    Write-Verbose "$($m) did exists in the system..."
+                    [void]($Module.Add($m))
+                }
+                else {
+                    Write-Warning "$($m) did not exists in the system, skipping this module..."
+                }
+            }
+        }
     }
 
     # Making sure that TLS 1.2 is used.
