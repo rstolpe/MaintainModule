@@ -86,7 +86,7 @@ Function Uninstall-RSModule {
         # If the module has more then one version loop trough the versions and only keep the most current one
         if ([version]$GetAllInstalledVersions.Version.Count -gt 1) {
             [version]$MostRecentVersion = $GetAllInstalledVersions[0].Version
-            Foreach ($Version in [version]$GetAllInstalledVersions.Version | Where-Object { [version]$_.version -lt $MostRecentVersion }) {
+            Foreach ($Version in [version]$GetAllInstalledVersions.Version | Where-Object { [version]$_.Version -lt [version]$MostRecentVersion }) {
                 try {
                     Write-Output "Uninstalling previous version $($Version) of module $($m)..."
                     Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
@@ -243,7 +243,7 @@ Function Update-RSModule {
 
             # Collects the latest version of module from the source where the module was installed from
             Write-Verbose "Looking up the latest version of $($m)..."
-            $CollectLatestVersion = Find-Module -Name $m | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -First 1
+            $CollectLatestVersion = Find-Module -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -First 1
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
             if ([version]$GetLatestInstalledVersions.Version -lt [version]$CollectLatestVersion.Version) {
