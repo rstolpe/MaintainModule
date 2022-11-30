@@ -131,11 +131,11 @@
 
             # Getting the latest installed version of the module
             Write-Verbose "Collecting all installed version of $($m)..."
-            $GetLatestInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object Version -Descending | Select-Object Version -First 1
+            $GetLatestInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -First 1
 
             # Collects the latest version of module from the source where the module was installed from
             Write-Verbose "Looking up the latest version of $($m)..."
-            $CollectLatestVersion = Find-Module -Name $m | Sort-Object Version -Descending | Select-Object Version -First 1
+            $CollectLatestVersion = Find-Module -Name $m | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -First 1
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
             if ([version]$GetLatestInstalledVersions.Version -lt [version]$CollectLatestVersion.Version) {
