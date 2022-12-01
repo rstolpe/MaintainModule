@@ -151,25 +151,25 @@ $ResultPSDPSM = foreach ($file in $CheckPSA) {
 
 # Import the module and save the Get-Help files to the $HelpPath for the module, files get saved in .md format
 Write-Verbose "Importing $($ModuleName) to the session..."
-#Import-Module -Name $($ModuleFolderPath) -MinimumVersion $Version -Force
+Import-Module -Name $($ModuleFolderPath) -MinimumVersion $Version -Force
 
 Write-Verbose "Writing $($ModuleName) functions to help files in $($HelpPath)..."
-#$mCommands = Get-Command -Module $ModuleName
-#foreach ($m in $mCommands) {
-#    if ($null -ne $m) {
-#        Write-Verbose "Creating help file of function $($m.Name)..."
-#        Get-Help -name $m.Name -Full | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $HelpPath -ChildPath "$($m.Name).md")
-#    }
-#}
-
-Write-Output "`n== Summery of PSScriptAnalyzer =="
-$ResultPS1
-$ResultPSDPSM
-
-if ($ResultPS1.Severity -contains "Warning" -or $ResultPSM.Severity -contains "Warning") {
-    Write-Error "PSAnalyzer severity did contain Warning, please fix this and run the RSModuleBuilder again. You can se the results from PSScriptAnalyzer below."
-    Break
+$mCommands = Get-Command -Module $ModuleName
+foreach ($m in $mCommands) {
+    if ($null -ne $m) {
+        Write-Verbose "Creating help file of function $($m.Name)..."
+        Get-Help -name $m.Name -Full | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $HelpPath -ChildPath "$($m.Name).md")
+    }
 }
+
+#Write-Output "`n== Summery of PSScriptAnalyzer =="
+#$ResultPS1
+#$ResultPSDPSM
+
+#if ($ResultPS1.Severity -contains "Warning" -or $ResultPSM.Severity -contains "Warning") {
+#    Write-Error "PSAnalyzer severity did contain Warning, please fix this and run the RSModuleBuilder again. You can se the results from PSScriptAnalyzer below."
+#    Break
+#}
 
 # Add so it check if it has any other flags in the analyzer then just inform about it.
 
