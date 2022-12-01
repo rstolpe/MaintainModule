@@ -122,38 +122,7 @@ else {
 Write-Verbose "Setting the placeholders for $($outPSDFile)"
 Set-Content -Path $outPSDFile -Value $PSDfileContent -Encoding utf8BOM -Force
 
-Write-Output "Running PSScriptAnalyzer on $($MigrateFunction.name)..."
-$ResultPS1 = foreach ($ps1 in $MigrateFunction.FullName) {
-    write-output "Är på fil $($ps1)"
-    $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
-    <#if ($null -ne $ps1) {
-        $ps1Name = $ps1 -split "/" -replace ".ps1" | Select-Object -Last 1
-        Write-Verbose "Running PSScriptAnalyzer on $($ps1Name).ps1..."
-        $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
-        if ($null -ne $PSAnalyzerPS1) {
-            $PSAnalyzerPS1 | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
-        }
-        else {
-            Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
-        }
-        $PSAnalyzerPS1
-    }#>
-}
-<#
-Write-Output "Running PSScriptAnalyzer on $($outPSDFile) and $($outPSMFile)..."
-$CheckPSA = @($outPSDFile, $outPSMFile)
-$ResultPSDPSM = foreach ($file in $CheckPSA) {
-    $psdPSMName = $file -split "/" | Select-Object -Last 1
-    Write-Verbose "Running PSScriptAnalyzer on $($psdPSMName)..."
-    $PSAnalyzer = Invoke-ScriptAnalyzer -Path $file -ReportSummary
-    if ($null -ne $PSAnalyzer) {
-        $PSAnalyzer | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($psdPSMName)_$($TodaysDate).md")
-    }
-    else {
-        Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($psdPSMName)_$($TodaysDate).md")
-    }
-    $PSAnalyzer
-}#>
+
 
 # Import the module and save the Get-Help files to the $HelpPath for the module, files get saved in .md format
 Write-Verbose "Importing $($ModuleName) to the session..."
@@ -168,8 +137,7 @@ foreach ($m in $mCommands) {
     }
 }
 
-#Write-Output "`n== Summery of PSScriptAnalyzer =="
-#$ResultPS1
+Write-Output "`n== Summery of PSScriptAnalyzer =="
 #$ResultPSDPSM
 
 #if ($ResultPS1.Severity -contains "Warning" -or $ResultPSM.Severity -contains "Warning") {
