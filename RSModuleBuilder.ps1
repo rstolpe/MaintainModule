@@ -54,18 +54,20 @@ $MigrateFunction = @( $(Get-ChildItem -Path $srcPublicFunctionPath/*.ps1 | Selec
 # Looping trough the .ps1 files and migrating them to one singel .psm1 file and saving it in the module folder
 Write-Verbose "Start to migrate all functions in to the .psm1 file and collecting the function names to add in the FunctionToExport in the .psd1 file"
 foreach ($function in $MigrateFunction.FullName) {
-    # Migrates all of the .ps1 files that are located in src/Function in to one .psm1 file saved in the module folder
-    $Results = [System.Management.Automation.Language.Parser]::ParseFile($function, [ref]$null, [ref]$null)
-    $Functions = $Results.EndBlock.Extent.Text
-    $Functions | Add-Content -Path $outPSMFile
+    if ($null -ne $function) {
+        # Migrates all of the .ps1 files that are located in src/Function in to one .psm1 file saved in the module folder
+        $Results = [System.Management.Automation.Language.Parser]::ParseFile($function, [ref]$null, [ref]$null)
+        $Functions = $Results.EndBlock.Extent.Text
+        $Functions | Add-Content -Path $outPSMFile
 
-    # Converting the function name to fit the .psd1 file for exporting
-    $function = $function -split "/" -replace ".ps1" | Select-Object -Last 1
-    $function = """$($function)"","
-    [void]($function.trim())
+        # Converting the function name to fit the .psd1 file for exporting
+        $function = $function -split "/" -replace ".ps1" | Select-Object -Last 1
+        $function = """$($function)"","
+        [void]($function.trim())
 
-    # Collect the name of all .ps1 files so it can be added as functions in the psd1 file.
-    [void]($FunctionPSD.Add($function))
+        # Collect the name of all .ps1 files so it can be added as functions in the psd1 file.
+        [void]($FunctionPSD.Add($function))
+    }
 }
 
 # if $MigrateFunction are not empty remove the last , from the $FunctionPSD ArrayList
@@ -122,16 +124,18 @@ Set-Content -Path $outPSDFile -Value $PSDfileContent -Encoding utf8BOM -Force
 
 Write-Output "Running PSScriptAnalyzer on $($MigrateFunction.name)..."
 $ResultPS1 = foreach ($ps1 in $MigrateFunction.FullName) {
-    $ps1Name = $ps1 -split "/" -replace ".ps1" | Select-Object -Last 1
-    Write-Verbose "Running PSScriptAnalyzer on $($ps1Name).ps1..."
-    $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
-    if ($null -ne $PSAnalyzerPS1) {
-        $PSAnalyzerPS1 | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
+    if ($null -ne $ps1) {
+        $ps1Name = $ps1 -split "/" -replace ".ps1" | Select-Object -Last 1
+        Write-Verbose "Running PSScriptAnalyzer on $($ps1Name).ps1..."
+        $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
+        if ($null -ne $PSAnalyzerPS1) {
+            $PSAnalyzerPS1 | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
+        }
+        else {
+            Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
+        }
+        $PSAnalyzerPS1
     }
-    else {
-        Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
-    }
-    $PSAnalyzerPS1
 }
 
 Write-Output "Running PSScriptAnalyzer on $($outPSDFile) and $($outPSMFile)..."
