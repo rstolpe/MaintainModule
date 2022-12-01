@@ -21,7 +21,7 @@ Import-Module -Name EasyModuleBuild -Force
 $Year = (Get-Date).Year
 $TodaysDate = Get-Date -Format "yyyy-MM-dd"
 $ModuleName = $(Get-Location) -split "/" | Select-Object -last 1
-$scriptPath = "/Users/rstolpe/Dev/GitHub/MaintainModule" #split-path -parent $MyInvocation.MyCommand.Definition
+$scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $HelpPath = Join-Path -Path $scriptPath -ChildPath "help"
 $ModuleFolderPath = Join-Path -Path $scriptPath -ChildPath $ModuleName
 $srcPath = Join-Path -Path $scriptPath -ChildPath ".src"
