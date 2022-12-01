@@ -21,7 +21,7 @@ Import-Module -Name EasyModuleBuild -Force
 $Year = (Get-Date).Year
 $TodaysDate = Get-Date -Format "yyyy-MM-dd"
 $ModuleName = $(Get-Location) -split "/" | Select-Object -last 1
-$scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
+$scriptPath = "/Users/rstolpe/Dev/GitHub/MaintainModule" #split-path -parent $MyInvocation.MyCommand.Definition
 $HelpPath = Join-Path -Path $scriptPath -ChildPath "help"
 $ModuleFolderPath = Join-Path -Path $scriptPath -ChildPath $ModuleName
 $srcPath = Join-Path -Path $scriptPath -ChildPath ".src"
@@ -125,7 +125,8 @@ Set-Content -Path $outPSDFile -Value $PSDfileContent -Encoding utf8BOM -Force
 Write-Output "Running PSScriptAnalyzer on $($MigrateFunction.name)..."
 $ResultPS1 = foreach ($ps1 in $MigrateFunction.FullName) {
     write-output "Är på fil $($ps1)"
-    if ($null -ne $ps1) {
+    $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
+    <#if ($null -ne $ps1) {
         $ps1Name = $ps1 -split "/" -replace ".ps1" | Select-Object -Last 1
         Write-Verbose "Running PSScriptAnalyzer on $($ps1Name).ps1..."
         $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
@@ -136,7 +137,7 @@ $ResultPS1 = foreach ($ps1 in $MigrateFunction.FullName) {
             Write-Output "0 rule violations found." | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
         }
         $PSAnalyzerPS1
-    }
+    }#>
 }
 <#
 Write-Output "Running PSScriptAnalyzer on $($outPSDFile) and $($outPSMFile)..."
