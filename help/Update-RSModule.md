@@ -94,12 +94,13 @@ OUTPUTS
 NOTES
     
     
-        Author:     Robin Stolpe
-        Mail:       robin@stolpe.io
-        Twitter:    @rstolpes
-        Website:    https://stolpe.io
-        GitHub:     https://github.com/rstolpe
-        PSGallery:  https://www.powershellgallery.com/profiles/rstolpe
+        Author:         Robin Stolpe
+        Mail:           robin@stolpe.io
+        Twitter:        https://twitter.com/rstolpes
+        Linkedin:       https://www.linkedin.com/in/rstolpe/
+        Website/Blog:   https://stolpe.io
+        GitHub:         https://github.com/rstolpe
+        PSGallery:      https://www.powershellgallery.com/profiles/rstolpe
     
     -------------------------- EXAMPLE 1 --------------------------
     

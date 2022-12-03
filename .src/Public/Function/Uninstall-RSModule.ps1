@@ -21,12 +21,13 @@
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES
-        Author:     Robin Stolpe
-        Mail:       robin@stolpe.io
-        Website:	https://stolpe.io
-        GitHub:		https://github.com/rstolpe
-        Twitter:	https://twitter.com/rstolpes
-        PSGallery:	https://www.powershellgallery.com/profiles/rstolpe
+        Author:         Robin Stolpe
+        Mail:           robin@stolpe.io
+        Twitter:        https://twitter.com/rstolpes
+        Linkedin:       https://www.linkedin.com/in/rstolpe/
+        Website/Blog:   https://stolpe.io
+        GitHub:         https://github.com/rstolpe
+        PSGallery:      https://www.powershellgallery.com/profiles/rstolpe
     #>
 
     [CmdletBinding(SupportsShouldProcess)]
