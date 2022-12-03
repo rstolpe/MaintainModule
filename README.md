@@ -1,4 +1,9 @@
 # MaintainModule
+![GitHub](https://img.shields.io/github/license/rstolpe/MaintainModule?style=plastic) ![GitHub last commit](https://img.shields.io/github/last-commit/rstolpe/MaintainModule?style=plastic) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/rstolpe/maintainmodule?sort=semver&style=plastic)  
+  
+![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2Frstolpes)  
+  
+  
 This module let you update all of your installed modules and also uninstall the old versions to keep things clean.
 You can also specify module or modules that you want to update. It's also possible to install the module if it's missing and import the modules in the end of the script.
 
