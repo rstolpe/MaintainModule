@@ -36,7 +36,7 @@ $TestPath = Join-Path -Path $scriptPath -ChildPath "test"
 Write-OutPut "`n== Building module $($ModuleName) ==`n"
 Write-OutPut "Starting to build the module, please wait..."
 
-# Check so all the needed folders exists, if they don't they will get created.
+# Check so all the needed folders exists, if they don't they will get created
 Checkpoint-RSFolderFile -ModulePath $scriptPath -ModuleName $ModuleName -New $false
 
 # Deleting existing files that will get replaced by this script
