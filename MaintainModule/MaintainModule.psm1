@@ -66,8 +66,8 @@ Function Uninstall-RSModule {
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
         $OldModule = $Module.Split(",").Trim()
+        $Module = [System.Collections.Generic.List[string]]::new()
 
-        [System.Collections.ArrayList]$Module = @()
         Write-Verbose "Looking so the modules exists in the system..."
         foreach ($m in $OldModule) {
             if ($m -in $InstalledModules.name) {
@@ -197,8 +197,8 @@ Function Update-RSModule {
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
         $OldModule = $Module.Split(",").Trim()
+        $Module = [System.Collections.Generic.List[string]]::new()
 
-        [System.Collections.ArrayList]$Module = @()
         if ($InstallMissing -eq $false) {
             Write-Verbose "Looking so the modules exists in the system..."
             foreach ($m in $OldModule) {
