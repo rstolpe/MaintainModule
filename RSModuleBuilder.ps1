@@ -4,11 +4,19 @@
 [string]$Author = "Robin Stolpe"
 [string]$Mail = "robin@stolpe.io"
 [string]$Website = "https://stolpe.io"
-#
-[string]$Version = "0.1.2"
-[bool]$Publish = $false
-[string]$apiKey = ""
 [string]$preRelease = "Alpha"
+[string]$Company = "Stolpe.io"
+[string]$apiKey = ""
+#
+# Changes on every build
+[string]$Version = "0.1.2"
+[string]$PowerShellVersion = "5.1"
+[string]$ProcessorArchitecture = "X64, X86, amd64, arm64"
+[string]$LicenseUrl = "https://github.com/rstolpe/MaintainModule/blob/main/LICENSE"
+[string]$ProjectUrl = "https://github.com/rstolpe/MaintainModule"
+[string]$ReleaseNotesUrl = "https://github.com/rstolpe/MaintainModule/releases"
+[string]$Description = "This module will help you to update your software on your Windows 10 and Windows 11 machines."
+[bool]$Publish = $false
 
 # Creating ArrayList for use later in the script
 $FunctionPSD = [System.Collections.Generic.List[string]]::new()
@@ -107,9 +115,16 @@ $PSDfileContent = $PSDfileContent -replace '{{manifestDate}}', $TodaysDate
 $PSDfileContent = $PSDfileContent -replace '{{moduleName}}', $ModuleName
 $PSDfileContent = $PSDfileContent -replace '{{year}}', $Year
 $PSDfileContent = $PSDfileContent -replace '{{version}}', $Version
-$PSDfileContent = $PSDfileContent -replace '{{preReleaseTag}}', $preReleaseTag
-$PSMfileContent = $PSMfileContent -replace '{{mail}}', $Mail
-$PSMfileContent = $PSMfileContent -replace '{{website}}', $Website
+$PSDfileContent = $PSDfileContent -replace '{{mail}}', $Mail
+$PSDfileContent = $PSDfileContent -replace '{{website}}', $Website
+$PSDfileContent = $PSDfileContent -replace '{{company}}', $Company
+$PSDfileContent = $PSDfileContent -replace '{{prerelease}}', $preRelease
+$PSDfileContent = $PSDfileContent -replace '{{releasenotes}}', $ReleaseNotesUrl
+$PSDfileContent = $PSDfileContent -replace '{{licenseuri}}', $LicenseUrl
+$PSDfileContent = $PSDfileContent -replace '{{projecturi}}', $ProjectUrl
+$PSDfileContent = $PSDfileContent -replace '{{description}}', $Description
+$PSDfileContent = $PSDfileContent -replace '{{powershellversion}}', $PowerShellVersion
+$PSDfileContent = $PSDfileContent -replace '{{processorarchitecture}}}', $ProcessorArchitecture
 
 # If $FunctionPSD are empty, then adding @() instead according to best practices for performance
 if ($null -ne $FunctionPSD) {

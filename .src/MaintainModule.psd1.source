@@ -1,8 +1,8 @@
 ﻿<#
     MIT License
 
-    Copyright (c) {{year}} {{author}}
-    <{{mail}}>
+    Copyright (C) {{year}} {{author}}. 
+    {{mail}}
     <{{website}}>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,10 +35,10 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule        = '.\{{moduleName}}.psm1'
+    RootModule = '.\{{moduleName}}.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '{{version}}'
+    ModuleVersion = '{{version}}'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -47,19 +47,19 @@
     GUID              = '4fec1769-909e-44cf-b715-bbc6b10564b3'
 
     # Author of this module
-    Author            = '{{author}}'
+    Author = '{{author}}'
 
     # Company or vendor of this module
-    CompanyName       = 'Stolpe.io'
+    CompanyName = '{{company}}'
 
     # Copyright statement for this module
-    Copyright         = '(c) {{year}} {{author}}. All rights reserved.'
+    Copyright = '(c) {{year}} {{author}}. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'This module let you maintain your installed modules in a easy way'
+    Description = '{{description}}'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion = '5.1'
+    PowerShellVersion = '{{powershellversion}}'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
@@ -74,7 +74,7 @@
     # ClrVersion = ''
 
     # Processor architecture (None, X86, Amd64) required by this module
-    # ProcessorArchitecture = ''
+    ProcessorArchitecture = '{{processorarchitecture}}}'
 
     # Modules that must be imported into the global environment prior to importing this module
     # RequiredModules = @()
@@ -98,7 +98,7 @@
     FunctionsToExport = {{function}}
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport   = @()
+    CmdletsToExport = @()
 
     # Variables to export from this module
     VariablesToExport = '*'
@@ -124,19 +124,19 @@
             Tags                     = @("PowerShell", "macOS", "Windows", "Linux", "support-tool", "sysadmin-tool", "it-tool", "maintain-module", "module-maintenance", "multi-platform", "multiOS")
 
             # A URL to the license for this module.
-            LicenseUri               = 'https://github.com/rstolpe/MaintainModule/blob/main/LICENSE'
+            LicenseUri = '{{licenseuri}}'
 
             # A URL to the main website for this project.
-            ProjectUri               = 'https://github.com/rstolpe/MaintainModule'
+            ProjectUri = '{{projecturi}}'
 
             # A URL to an icon representing this module.
             # IconUri = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes             = 'https://github.com/rstolpe/MaintainModule/releases'
+            ReleaseNotes = '{{releasenotes}}'
 
             # Prerelease string of this module
-            # Prerelease               = '{{preReleaseTag}}'
+            Prerelease = '{{prerelease}}'
 
             # Flag to indicate whether the module requires explicit user acceptance for install/update/save
             RequireLicenseAcceptance = $false
@@ -149,7 +149,7 @@
     } # End of PrivateData hashtable
 
     # HelpInfo URI of this module
-    # HelpInfoURI       = ''
+    # HelpInfoURI = ''
 
     # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
     # DefaultCommandPrefix = ''
