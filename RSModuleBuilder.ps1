@@ -11,7 +11,7 @@
 # Changes on every build
 [string]$Version = "0.1.2"
 [string]$PowerShellVersion = "5.1"
-[string]$ProcessorArchitecture = "X64, X86, amd64, arm64"
+[string]$ProcessorArchitecture = ""
 [string]$LicenseUrl = "https://github.com/rstolpe/MaintainModule/blob/main/LICENSE"
 [string]$ProjectUrl = "https://github.com/rstolpe/MaintainModule"
 [string]$ReleaseNotesUrl = "https://github.com/rstolpe/MaintainModule/releases"
@@ -65,7 +65,7 @@ foreach ($function in $MigrateFunction.FullName) {
 
     # Converting the function name to fit the .psd1 file for exporting
     $function = $function -split "/" -replace ".ps1" | Select-Object -Last 1
-    $function = """$($function)"","
+    $function = """$($function)"", "
     [void]($function.trim())
 
     # Collect the name of all .ps1 files so it can be added as functions in the psd1 file.
@@ -78,7 +78,7 @@ if ($null -ne $MigrateFunction) {
     # Bug! If the module only contain one function the , after the name are not removed, need to remove that
     $FunctionPSD = $FunctionPSD | ForEach-Object {
         if ( $FunctionPSD.IndexOf($_) -eq ($FunctionPSD.count - 1) ) {
-            $_.replace(",", "")
+            $_.replace(", ", "")
         }
         else {
             $_

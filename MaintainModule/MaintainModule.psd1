@@ -1,9 +1,9 @@
 ﻿<#
     MIT License
 
-    Copyright (c) 2023 Robin Stolpe
-    <{{mail}}>
-    <{{website}}>
+    Copyright (C) 2023 Robin Stolpe. 
+    robin@stolpe.io
+    <https://stolpe.io>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -35,10 +35,10 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule        = '.\MaintainModule.psm1'
+    RootModule = '.\MaintainModule.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '0.1.2'
+    ModuleVersion = '0.1.2'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -47,16 +47,16 @@
     GUID              = '4fec1769-909e-44cf-b715-bbc6b10564b3'
 
     # Author of this module
-    Author            = 'Robin Stolpe'
+    Author = 'Robin Stolpe'
 
     # Company or vendor of this module
-    CompanyName       = 'Stolpe.io'
+    CompanyName = 'Stolpe.io'
 
     # Copyright statement for this module
-    Copyright         = '(c) 2023 Robin Stolpe. All rights reserved.'
+    Copyright = '(c) 2023 Robin Stolpe. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'This module let you maintain your installed modules in a easy way'
+    Description = 'This module will help you to update your software on your Windows 10 and Windows 11 machines.'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '5.1'
@@ -74,7 +74,7 @@
     # ClrVersion = ''
 
     # Processor architecture (None, X86, Amd64) required by this module
-    # ProcessorArchitecture = ''
+    ProcessorArchitecture = ''
 
     # Modules that must be imported into the global environment prior to importing this module
     # RequiredModules = @()
@@ -95,10 +95,10 @@
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = "Uninstall-RSModule", "Update-RSModule"
+    FunctionsToExport = "Uninstall-RSModule",  "Update-RSModule"
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport   = @()
+    CmdletsToExport = @()
 
     # Variables to export from this module
     VariablesToExport = '*'
@@ -124,19 +124,19 @@
             Tags                     = @("PowerShell", "macOS", "Windows", "Linux", "support-tool", "sysadmin-tool", "it-tool", "maintain-module", "module-maintenance", "multi-platform", "multiOS")
 
             # A URL to the license for this module.
-            LicenseUri               = 'https://github.com/rstolpe/MaintainModule/blob/main/LICENSE'
+            LicenseUri = 'https://github.com/rstolpe/MaintainModule/blob/main/LICENSE'
 
             # A URL to the main website for this project.
-            ProjectUri               = 'https://github.com/rstolpe/MaintainModule'
+            ProjectUri = 'https://github.com/rstolpe/MaintainModule'
 
             # A URL to an icon representing this module.
             # IconUri = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes             = 'https://github.com/rstolpe/MaintainModule/releases'
+            ReleaseNotes = 'https://github.com/rstolpe/MaintainModule/releases'
 
             # Prerelease string of this module
-            # Prerelease               = ''
+            Prerelease = 'Alpha'
 
             # Flag to indicate whether the module requires explicit user acceptance for install/update/save
             RequireLicenseAcceptance = $false
@@ -149,7 +149,7 @@
     } # End of PrivateData hashtable
 
     # HelpInfo URI of this module
-    # HelpInfoURI       = ''
+    # HelpInfoURI = ''
 
     # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
     # DefaultCommandPrefix = ''
