@@ -1,9 +1,11 @@
 ﻿#Requires -Modules PSScriptAnalyzer
 
 # Static variables
-[string]$Version = "0.1.2"
 [string]$Author = "Robin Stolpe"
+[string]$Mail = "robin@stolpe.io"
+[string]$Website = "https://stolpe.io"
 #
+[string]$Version = "0.1.2"
 [bool]$Publish = $false
 [string]$apiKey = ""
 [string]$preRelease = "Alpha"
@@ -83,6 +85,8 @@ $PSMfileContent = Get-Content -Path $outPSMFile
 Write-Verbose "Replacing the placeholders in the $($outPSMFile) file"
 $PSMfileContent = $PSMfileContent -replace '{{year}}', $year
 $PSMfileContent = $PSMfileContent -replace '{{author}}', $Author
+$PSMfileContent = $PSMfileContent -replace '{{mail}}', $Mail
+$PSMfileContent = $PSMfileContent -replace '{{website}}', $Website
 
 Write-Verbose "Setting the placeholders for $($outPSMFile)"
 Set-Content -Path $outPSMFile -Value $PSMfileContent -Encoding utf8BOM -Force
@@ -104,6 +108,8 @@ $PSDfileContent = $PSDfileContent -replace '{{moduleName}}', $ModuleName
 $PSDfileContent = $PSDfileContent -replace '{{year}}', $Year
 $PSDfileContent = $PSDfileContent -replace '{{version}}', $Version
 $PSDfileContent = $PSDfileContent -replace '{{preReleaseTag}}', $preReleaseTag
+$PSMfileContent = $PSMfileContent -replace '{{mail}}', $Mail
+$PSMfileContent = $PSMfileContent -replace '{{website}}', $Website
 
 # If $FunctionPSD are empty, then adding @() instead according to best practices for performance
 if ($null -ne $FunctionPSD) {
