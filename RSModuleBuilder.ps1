@@ -1,7 +1,7 @@
 ﻿#Requires -Modules PSScriptAnalyzer
 
 # Static variables
-[string]$Version = "0.0.1"
+[string]$Version = "0.1.2"
 [string]$Author = "Robin Stolpe"
 #
 [bool]$Publish = $false
