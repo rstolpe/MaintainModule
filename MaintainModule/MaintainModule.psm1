@@ -37,7 +37,7 @@ Function Uninstall-RSModule {
         # This will uninstall all older versions of the module VMWare.PowerCLI system.
 
         .EXAMPLE
-        Uninstall-RSModule -Module "VMWare.PowerCLI, ImportExcel"
+        Uninstall-RSModule -Module "VMWare.PowerCLI", "ImportExcel"
         # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
 
         .LINK
@@ -56,7 +56,7 @@ Function Uninstall-RSModule {
     [CmdletBinding(SupportsShouldProcess)]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the module or modules (separated with ,) you want to uninstall")]
-        [string]$Module
+        [string[]]$Module
     )
 
     Write-Output "`n=== Starting to uninstall older versions of modules ===`n"
@@ -87,7 +87,7 @@ Function Uninstall-RSModule {
         }
     }
 
-    foreach ($m in $Module.Split()) {
+    foreach ($m in $Module) {
         Write-Verbose "Collecting all installed version of the module $($m)"
         $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -ExpandProperty Version
 
@@ -144,19 +144,19 @@ Function Update-RSModule {
         If you use this switch and the modules that are specified in the Module parameter are not installed on the system they will be installed.
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI, ImportExcel" -Scope CurrentUser
+        Update-RSModule -Module "PowerCLI", "ImportExcel" -Scope CurrentUser
         # This will update the modules PowerCLI, ImportExcel for the current user
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion
+        Update-RSModule -Module "PowerCLI", "ImportExcel" -UninstallOldVersion
         # This will update the modules PowerCLI, ImportExcel and delete all of the old versions that are installed of PowerCLI, ImportExcel.
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI, ImportExcel" -InstallMissing
+        Update-RSModule -Module "PowerCLI", "ImportExcel" -InstallMissing
         # This will install the modules PowerCLI and/or ImportExcel on the system if they are missing, if the modules are installed already they will only get updated.
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion -ImportModule
+        Update-RSModule -Module "PowerCLI", "ImportExcel" -UninstallOldVersion -ImportModule
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
 
         .LINK
@@ -174,10 +174,10 @@ Function Update-RSModule {
 
     [CmdletBinding(SupportsShouldProcess)]
     Param(
-        [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules (separated with ,) that you want to update, if you don't enter any all of the modules will be updated")]
-        [string]$Module,
+        [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules that you want to update, if you don't enter any, all of the modules will be updated")]
+        [string[]]$Module,
+        [Parameter(Mandatory = $false, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules, default is CurrentUser")]
         [ValidateSet("CurrentUser", "AllUsers")]
-        [Parameter(Mandatory = $false, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules")]
         [string]$Scope = "CurrentUser",
         [Parameter(Mandatory = $false, HelpMessage = "Import modules that has been entered in the module parameter at the end of this function")]
         [switch]$ImportModule = $false,
@@ -242,7 +242,7 @@ Function Update-RSModule {
 
 
     # Start looping trough every module that are stored in the string Module
-    foreach ($m in $Module.Split()) {
+    foreach ($m in $Module) {
         Write-Verbose "Checks if $($m) are installed"
         if ($m -in $InstalledModules.Name) {
 
@@ -305,7 +305,7 @@ Function Update-RSModule {
 
             # Import module if it's not imported
             Write-Verbose "Starting to import the modules..."
-            foreach ($m in $Module.Split()) {
+            foreach ($m in $Module) {
                 if ($m -in $ImportedModules.Name) {
                     Write-Verbose "$($m) are already imported!"
                 }
