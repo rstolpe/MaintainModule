@@ -57,7 +57,7 @@ If you want you can update specific modules, you can do that with the following 
 ````
 Update-RSModule -Module "VMWare.PowerCLI"
 ````
-The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```  
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel", "VMWare.PowerCLI"```  
 You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
 If -Scope parameter are empty it will set it as CurrentUser as default.
 
@@ -75,7 +75,7 @@ If you want to uninstall old versions of only a specific module you can run
 ````
 Update-RSModule -Module "ImportExcel" -UninstallOldVersion
 ````
-The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel", "VMWare.PowerCLI"```
 You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
 If -Scope parameter are empty it will set it as CurrentUser as default.
 
@@ -85,7 +85,7 @@ If the module are installed already this will not have any effect and the module
 ````
 Update-RSModule -Module "VMWare.PowerCLI" -InstallMissing
 ````
-The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel", "VMWare.PowerCLI"```
 You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
 If -Scope parameter are empty it will set it as CurrentUser as default.
 
@@ -94,7 +94,7 @@ You can choose to import all of the modules at the end of the script, this only 
 ````
 Update-RSModule -Module "VMWare.PowerCLI" -ImportModule
 ````
-The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel", "VMWare.PowerCLI"```
 You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
 If -Scope parameter are empty it will set it as CurrentUser as default.
 
@@ -111,4 +111,4 @@ If you want to uninstall all older version of a specific module
 ````
 Uninstall-RSModule -Module "ImportExcel"
 ````
-The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel, VMWare.PowerCLI"```
+The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel", "VMWare.PowerCLI"```

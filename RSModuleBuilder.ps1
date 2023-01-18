@@ -4,12 +4,12 @@
 [string]$Author = "Robin Stolpe"
 [string]$Mail = "robin@stolpe.io"
 [string]$Website = "https://stolpe.io"
-[string]$preRelease = ""
+[string]$preRelease = "beta"
 [string]$Company = "Stolpe.io"
 [string]$apiKey = ""
 #
 # Changes on every build
-[string]$Version = "0.1.3"
+[string]$Version = "0.1.4"
 [string]$PowerShellVersion = "5.1"
 [string]$Tags = '"PowerShell", "macOS", "Windows", "Linux", "support-tool", "sysadmin-tool", "it-tool", "maintain-module", "module-maintenance", "multi-platform", "multiOS"'
 [string]$ProcessorArchitecture = ""

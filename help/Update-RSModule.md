@@ -7,7 +7,7 @@ SYNOPSIS
     
     
 SYNTAX
-    Update-RSModule [[-Module] <String>] [[-Scope] <String>] [-ImportModule] [-UninstallOldVersion] [-InstallMissing] [-WhatIf] [-Confirm] [<CommonParameters>]
+    Update-RSModule [[-Module] <String[]>] [[-Scope] <String>] [-ImportModule] [-UninstallOldVersion] [-InstallMissing] [-WhatIf] [-Confirm] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -16,7 +16,7 @@ DESCRIPTION
     
 
 PARAMETERS
-    -Module <String>
+    -Module <String[]>
         Specify the module or modules that you want to update, if you don't specify any module all installed modules are updated
         
         Required?                    false
@@ -104,7 +104,7 @@ NOTES
     
     -------------------------- EXAMPLE 1 --------------------------
     
-    PS > Update-RSModule -Module "PowerCLI, ImportExcel" -Scope CurrentUser
+    PS > Update-RSModule -Module "PowerCLI", "ImportExcel" -Scope CurrentUser
     # This will update the modules PowerCLI, ImportExcel for the current user
     
     
@@ -114,7 +114,7 @@ NOTES
     
     -------------------------- EXAMPLE 2 --------------------------
     
-    PS > Update-RSModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion
+    PS > Update-RSModule -Module "PowerCLI", "ImportExcel" -UninstallOldVersion
     # This will update the modules PowerCLI, ImportExcel and delete all of the old versions that are installed of PowerCLI, ImportExcel.
     
     
@@ -124,7 +124,7 @@ NOTES
     
     -------------------------- EXAMPLE 3 --------------------------
     
-    PS > Update-RSModule -Module "PowerCLI, ImportExcel" -InstallMissing
+    PS > Update-RSModule -Module "PowerCLI", "ImportExcel" -InstallMissing
     # This will install the modules PowerCLI and/or ImportExcel on the system if they are missing, if the modules are installed already they will only get updated.
     
     
@@ -134,7 +134,7 @@ NOTES
     
     -------------------------- EXAMPLE 4 --------------------------
     
-    PS > Update-RSModule -Module "PowerCLI, ImportExcel" -UninstallOldVersion -ImportModule
+    PS > Update-RSModule -Module "PowerCLI", "ImportExcel" -UninstallOldVersion -ImportModule
     # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
     
     

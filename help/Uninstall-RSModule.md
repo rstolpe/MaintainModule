@@ -7,7 +7,7 @@ SYNOPSIS
     
     
 SYNTAX
-    Uninstall-RSModule [[-Module] <String>] [-WhatIf] [-Confirm] [<CommonParameters>]
+    Uninstall-RSModule [[-Module] <String[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -15,7 +15,7 @@ DESCRIPTION
     
 
 PARAMETERS
-    -Module <String>
+    -Module <String[]>
         Specify modules that you want to uninstall older versions from, if this is left empty all of the older versions of the systems modules will be uninstalled
         
         Required?                    false
@@ -73,7 +73,7 @@ NOTES
     
     -------------------------- EXAMPLE 2 --------------------------
     
-    PS > Uninstall-RSModule -Module "VMWare.PowerCLI, ImportExcel"
+    PS > Uninstall-RSModule -Module "VMWare.PowerCLI", "ImportExcel"
     # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
     
     

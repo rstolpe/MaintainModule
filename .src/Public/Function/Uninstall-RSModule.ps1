@@ -14,7 +14,7 @@
         # This will uninstall all older versions of the module VMWare.PowerCLI system.
 
         .EXAMPLE
-        Uninstall-RSModule -Module "VMWare.PowerCLI, ImportExcel"
+        Uninstall-RSModule -Module "VMWare.PowerCLI", "ImportExcel"
         # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
 
         .LINK
@@ -33,7 +33,7 @@
     [CmdletBinding(SupportsShouldProcess)]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the module or modules (separated with ,) you want to uninstall")]
-        [string]$Module
+        [string[]]$Module
     )
 
     Write-Output "`n=== Starting to uninstall older versions of modules ===`n"
@@ -64,7 +64,7 @@
         }
     }
 
-    foreach ($m in $Module.Split()) {
+    foreach ($m in $Module) {
         Write-Verbose "Collecting all installed version of the module $($m)"
         $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -ExpandProperty Version
 
