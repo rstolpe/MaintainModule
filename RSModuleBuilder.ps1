@@ -1,22 +1,28 @@
-﻿param (
-    # Set this to true before releasing the module
-    [Parameter(Mandatory = $false, HelpMessage = "Enter the version number of this release")]
-    [string]$Version = "0.1.1",
-    # Fix this
-    [Parameter(Mandatory = $false, HelpMessage = ".")]
-    [string]$preRelease = "Alpha",
-    [Parameter(Mandatory = $false, HelpMessage = "Use this switch to publish this module on PSGallery")]
-    [bool]$Publish = $false,
-    # Validate so if $Publish is true this is needed
-    [Parameter(Mandatory = $false, HelpMessage = "Enter API key for PSGallery")]
-    [string]$apiKey
-)
+﻿#Requires -Modules PSScriptAnalyzer
 
-#Requires -Modules PSScriptAnalyzer
-Import-Module -Name EasyModuleBuild -Force
+# Static variables
+[string]$Author = "Robin Stolpe"
+[string]$Mail = "robin@stolpe.io"
+[string]$Website = "https://stolpe.io"
+[string]$preRelease = ""
+[string]$Company = "Stolpe.io"
+[string]$apiKey = ""
+#
+# Changes on every build
+[string]$Version = "0.1.3"
+[string]$PowerShellVersion = "5.1"
+[string]$Tags = '"PowerShell", "macOS", "Windows", "Linux", "support-tool", "sysadmin-tool", "it-tool", "maintain-module", "module-maintenance", "multi-platform", "multiOS"'
+[string]$ProcessorArchitecture = ""
+[string]$LicenseUrl = "https://github.com/rstolpe/MaintainModule/blob/main/LICENSE"
+[string]$ProjectUrl = "https://github.com/rstolpe/MaintainModule"
+[string]$ReleaseNotesUrl = "https://github.com/rstolpe/MaintainModule/releases"
+[string]$Description = "This module let you maintain/update your installed PowerShell modules in a easy way"
+[bool]$Publish = $false
 
 # Creating ArrayList for use later in the script
 $FunctionPSD = [System.Collections.Generic.List[string]]::new()
+
+Import-Module -Name EasyModuleBuild -Force
 
 $Year = (Get-Date).Year
 $TodaysDate = Get-Date -Format "yyyy-MM-dd"
@@ -30,7 +36,7 @@ $srcPrivateFunctionPath = Join-Path -Path $srcPath -ChildPath "private/function"
 $outPSMFile = Join-Path -Path $ModuleFolderPath -ChildPath "$($ModuleName).psm1"
 $outPSDFile = Join-Path -Path $ModuleFolderPath -ChildPath "$($ModuleName).psd1"
 $psdTemplate = Join-Path -Path $srcPath -ChildPath "$($ModuleName).psd1.source"
-$psmLicensPath = Join-Path -Path $srcPath -ChildPath "License"
+$psmLicensPath = Join-Path -Path $srcPath -ChildPath "license"
 $TestPath = Join-Path -Path $scriptPath -ChildPath "test"
 
 Write-OutPut "`n== Building module $($ModuleName) ==`n"
@@ -42,9 +48,8 @@ Checkpoint-RSFolderFile -ModulePath $scriptPath -ModuleName $ModuleName -New $fa
 # Deleting existing files that will get replaced by this script
 Remove-RSContent -ModuleName $ModuleName -ScriptPath $scriptPath -ExistingModule
 
-# Adding the text from the gnu3_add_file_licens.source to the to of the .psm1 file for licensing of GNU v3
-# Let user choose between GNU 3 or MIT
-$psmLicens = Get-Content -Path "$($psmLicensPath)/gnu3_add_file_licens.source" -ErrorAction SilentlyContinue
+# Adding the licens file to the top of the .psm1 file from .src/license
+$psmLicens = Get-Content -Path "$($psmLicensPath)/LICENSE.source" -ErrorAction SilentlyContinue
 $psmLicens | Add-Content -Path $outPSMFile
 
 # Collecting all .ps1 files that are located in .src private/function and public/function folders
@@ -88,6 +93,9 @@ $PSMfileContent = Get-Content -Path $outPSMFile
 
 Write-Verbose "Replacing the placeholders in the $($outPSMFile) file"
 $PSMfileContent = $PSMfileContent -replace '{{year}}', $year
+$PSMfileContent = $PSMfileContent -replace '{{author}}', $Author
+$PSMfileContent = $PSMfileContent -replace '{{mail}}', $Mail
+$PSMfileContent = $PSMfileContent -replace '{{website}}', $Website
 
 Write-Verbose "Setting the placeholders for $($outPSMFile)"
 Set-Content -Path $outPSMFile -Value $PSMfileContent -Encoding utf8BOM -Force
@@ -103,11 +111,22 @@ $PSDfileContent = Get-Content -Path $outPSDFile
 # Can I do a loop here? I just might :) remember to check if the varible is empty or not
 # Changing version, preReleaseTag and function in the .psd1 file
 Write-Verbose "Replacing the placeholders in the $($outPSDFile) file"
+$PSDfileContent = $PSDfileContent -replace '{{author}}', $Author
 $PSDfileContent = $PSDfileContent -replace '{{manifestDate}}', $TodaysDate
 $PSDfileContent = $PSDfileContent -replace '{{moduleName}}', $ModuleName
 $PSDfileContent = $PSDfileContent -replace '{{year}}', $Year
-$PSDfileContent = $PSDfileContent -replace '{{version}}', $version
-$PSDfileContent = $PSDfileContent -replace '{{preReleaseTag}}', $preReleaseTag
+$PSDfileContent = $PSDfileContent -replace '{{version}}', $Version
+$PSDfileContent = $PSDfileContent -replace '{{mail}}', $Mail
+$PSDfileContent = $PSDfileContent -replace '{{website}}', $Website
+$PSDfileContent = $PSDfileContent -replace '{{company}}', $Company
+$PSDfileContent = $PSDfileContent -replace '{{prerelease}}', $preRelease
+$PSDfileContent = $PSDfileContent -replace '{{releasenotes}}', $ReleaseNotesUrl
+$PSDfileContent = $PSDfileContent -replace '{{licenseuri}}', $LicenseUrl
+$PSDfileContent = $PSDfileContent -replace '{{projecturi}}', $ProjectUrl
+$PSDfileContent = $PSDfileContent -replace '{{description}}', $Description
+$PSDfileContent = $PSDfileContent -replace '{{powershellversion}}', $PowerShellVersion
+$PSDfileContent = $PSDfileContent -replace '{{processorarchitecture}}}', $ProcessorArchitecture
+$PSDfileContent = $PSDfileContent -replace '{{tags}}', $Tags
 
 # If $FunctionPSD are empty, then adding @() instead according to best practices for performance
 if ($null -ne $FunctionPSD) {
@@ -124,7 +143,7 @@ Write-Output "Running PSScriptAnalyzer on $($MigrateFunction.name)..."
 $ResultPS1 = foreach ($ps1 in $MigrateFunction.FullName) {
     $ps1Name = $ps1 -split "/" -replace ".ps1" | Select-Object -Last 1
     Write-Verbose "Running PSScriptAnalyzer on $($ps1Name).ps1..."
-    $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
+    $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary -Fix
     if ($null -ne $PSAnalyzerPS1) {
         $PSAnalyzerPS1 | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
     }
@@ -139,7 +158,7 @@ $CheckPSA = @($outPSDFile, $outPSMFile)
 $ResultPSDPSM = foreach ($file in $CheckPSA) {
     $psdPSMName = $file -split "/" | Select-Object -Last 1
     Write-Verbose "Running PSScriptAnalyzer on $($psdPSMName)..."
-    $PSAnalyzer = Invoke-ScriptAnalyzer -Path $file -ReportSummary
+    $PSAnalyzer = Invoke-ScriptAnalyzer -Path $file -ReportSummary -Fix
     if ($null -ne $PSAnalyzer) {
         $PSAnalyzer | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($psdPSMName)_$($TodaysDate).md")
     }

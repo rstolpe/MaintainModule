@@ -1,4 +1,7 @@
-![GitHub](https://img.shields.io/github/license/rstolpe/MaintainModule?style=plastic) ![GitHub last commit](https://img.shields.io/github/last-commit/rstolpe/MaintainModule?style=plastic) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/rstolpe/maintainmodule?sort=semver&style=plastic)  
+![GitHub](https://img.shields.io/github/license/rstolpe/MaintainModule?style=plastic)  
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/rstolpe/MaintainModule?sort=semver&style=plastic)  ![Last release](https://img.shields.io/github/release-date/rstolpe/MaintainModule?style=plastic)
+![GitHub last commit](https://img.shields.io/github/last-commit/rstolpe/MaintainModule?style=plastic)  
+![PSGallery downloads](https://img.shields.io/powershellgallery/dt/MaintainModule?style=plastic)
   
 # MaintainModule
 This module let you update all of your installed modules and also uninstall the old versions to keep things clean.  
@@ -15,6 +18,7 @@ I have added the result from PSScriptAnalyzer in [test folder](https://github.co
 - Import specified modules in the end of the script
 
 # Links
+* [My PowerShell Collection](https://github.com/rstolpe/PSCollection)
 * [Webpage/Blog](https://www.stolpe.io)
 * [Twitter](https://twitter.com/rstolpes)
 * [LinkedIn](https://www.linkedin.com/in/rstolpe/)
