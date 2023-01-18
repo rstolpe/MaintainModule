@@ -1,9 +1,7 @@
 ﻿<#
     MIT License
 
-    Copyright (C) {{year}} {{author}}. 
-    {{mail}}
-    <{{website}}>
+    Copyright (C) {{year}} {{author}}.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +42,7 @@
     # CompatiblePSEditions = @()
 
     # ID used to uniquely identify this module
-    GUID              = '4fec1769-909e-44cf-b715-bbc6b10564b3'
+    GUID = '4fec1769-909e-44cf-b715-bbc6b10564b3'
 
     # Author of this module
     Author = '{{author}}'
@@ -121,7 +119,7 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags                     = @("PowerShell", "macOS", "Windows", "Linux", "support-tool", "sysadmin-tool", "it-tool", "maintain-module", "module-maintenance", "multi-platform", "multiOS")
+            Tags = @({{tags}})
 
             # A URL to the license for this module.
             LicenseUri = '{{licenseuri}}'

@@ -4,18 +4,19 @@
 [string]$Author = "Robin Stolpe"
 [string]$Mail = "robin@stolpe.io"
 [string]$Website = "https://stolpe.io"
-[string]$preRelease = "Alpha"
+[string]$preRelease = ""
 [string]$Company = "Stolpe.io"
 [string]$apiKey = ""
 #
 # Changes on every build
-[string]$Version = "0.1.2"
+[string]$Version = "0.1.3"
 [string]$PowerShellVersion = "5.1"
+[string]$Tags = '"PowerShell", "macOS", "Windows", "Linux", "support-tool", "sysadmin-tool", "it-tool", "maintain-module", "module-maintenance", "multi-platform", "multiOS"'
 [string]$ProcessorArchitecture = ""
 [string]$LicenseUrl = "https://github.com/rstolpe/MaintainModule/blob/main/LICENSE"
 [string]$ProjectUrl = "https://github.com/rstolpe/MaintainModule"
 [string]$ReleaseNotesUrl = "https://github.com/rstolpe/MaintainModule/releases"
-[string]$Description = "This module will help you to update your software on your Windows 10 and Windows 11 machines."
+[string]$Description = "This module let you maintain/update your installed PowerShell modules in a easy way"
 [bool]$Publish = $false
 
 # Creating ArrayList for use later in the script
@@ -65,7 +66,7 @@ foreach ($function in $MigrateFunction.FullName) {
 
     # Converting the function name to fit the .psd1 file for exporting
     $function = $function -split "/" -replace ".ps1" | Select-Object -Last 1
-    $function = """$($function)"", "
+    $function = """$($function)"","
     [void]($function.trim())
 
     # Collect the name of all .ps1 files so it can be added as functions in the psd1 file.
@@ -78,7 +79,7 @@ if ($null -ne $MigrateFunction) {
     # Bug! If the module only contain one function the , after the name are not removed, need to remove that
     $FunctionPSD = $FunctionPSD | ForEach-Object {
         if ( $FunctionPSD.IndexOf($_) -eq ($FunctionPSD.count - 1) ) {
-            $_.replace(", ", "")
+            $_.replace(",", "")
         }
         else {
             $_
@@ -125,6 +126,7 @@ $PSDfileContent = $PSDfileContent -replace '{{projecturi}}', $ProjectUrl
 $PSDfileContent = $PSDfileContent -replace '{{description}}', $Description
 $PSDfileContent = $PSDfileContent -replace '{{powershellversion}}', $PowerShellVersion
 $PSDfileContent = $PSDfileContent -replace '{{processorarchitecture}}}', $ProcessorArchitecture
+$PSDfileContent = $PSDfileContent -replace '{{tags}}', $Tags
 
 # If $FunctionPSD are empty, then adding @() instead according to best practices for performance
 if ($null -ne $FunctionPSD) {
@@ -141,7 +143,7 @@ Write-Output "Running PSScriptAnalyzer on $($MigrateFunction.name)..."
 $ResultPS1 = foreach ($ps1 in $MigrateFunction.FullName) {
     $ps1Name = $ps1 -split "/" -replace ".ps1" | Select-Object -Last 1
     Write-Verbose "Running PSScriptAnalyzer on $($ps1Name).ps1..."
-    $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary
+    $PSAnalyzerPS1 = Invoke-ScriptAnalyzer -Path $ps1 -ReportSummary -Fix
     if ($null -ne $PSAnalyzerPS1) {
         $PSAnalyzerPS1 | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($ps1Name)_$($TodaysDate).md")
     }
@@ -156,7 +158,7 @@ $CheckPSA = @($outPSDFile, $outPSMFile)
 $ResultPSDPSM = foreach ($file in $CheckPSA) {
     $psdPSMName = $file -split "/" | Select-Object -Last 1
     Write-Verbose "Running PSScriptAnalyzer on $($psdPSMName)..."
-    $PSAnalyzer = Invoke-ScriptAnalyzer -Path $file -ReportSummary
+    $PSAnalyzer = Invoke-ScriptAnalyzer -Path $file -ReportSummary -Fix
     if ($null -ne $PSAnalyzer) {
         $PSAnalyzer | select-object * | Out-File -Encoding UTF8BOM -FilePath $(Join-Path -Path $TestPath -ChildPath "PSScriptAnalyzer_$($psdPSMName)_$($TodaysDate).md")
     }
