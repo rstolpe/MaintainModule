@@ -26,6 +26,8 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+RSModuleBuilder.ps1
+MaintainModule.psd1.source
 
 *.csproj.user
 
@@ -34,3 +36,4 @@ obj/
 .vs/
 .vscode/
 .idea/
+license/
