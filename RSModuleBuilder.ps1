@@ -9,7 +9,7 @@
 [string]$apiKey = ""
 #
 # Changes on every build
-[string]$Version = "0.1.4"
+[string]$Version = "0.1.5"
 [string]$PowerShellVersion = "5.1"
 [string]$Tags = '"PowerShell", "macOS", "Windows", "Linux", "support-tool", "sysadmin-tool", "it-tool", "maintain-module", "module-maintenance", "multi-platform", "multiOS"'
 [string]$ProcessorArchitecture = ""

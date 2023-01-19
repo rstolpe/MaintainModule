@@ -135,7 +135,7 @@
             [version]$LatestInstalledVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
 
             # Collects the latest version of module from the source where the module was installed from
-            Write-Output "Looking up the latest version of $($m)..."
+            Write-Verbose "Looking up the latest version of $($m)..."
             [version]$CollectLatestVersion = $(Find-Module -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version -First 1).version
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
@@ -155,6 +155,7 @@
             # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
             if ($UninstallOldVersion -eq $true) {
                 if ($GetAllInstalledVersions.Count -gt 1) {
+                    Write-Output "Uninstalling old versions $($LatestInstalledVersion) of $($m)..."
                     Uninstall-RSModule -Module $m
                 }
             }
@@ -206,5 +207,5 @@
             }
         }
     }
-    Write-Output "`n---/// Script Finished! ///---"
+    Write-Output "`n=== \\\ Script Finished! /// ===`n"
 }
