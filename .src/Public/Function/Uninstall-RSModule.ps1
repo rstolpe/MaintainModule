@@ -90,5 +90,5 @@
             Write-Verbose "$($m) don't have any older versions installed then $($GetAllInstalledVersions), no need to uninstall anything."
         }
     }
-    Write-Output "`n---/// Script Finished! ///---"
+    Write-Output "`n=== \\\ Script Finished! /// ===`n"
 }
