@@ -26,14 +26,13 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
-RSModuleBuilder.ps1
-MaintainModule.psd1.source
-
 *.csproj.user
-
 bin/
 obj/
 .vs/
 .vscode/
 .idea/
 license/
+
+RSModuleBuilder.ps1
+MaintainModule.psd1.source
