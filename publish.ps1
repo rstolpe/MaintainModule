@@ -1,2 +1,2 @@
-$ModulePath = "$PSScriptRoot\publish.ps1"
+$ModulePath = "$PSScriptRoot\MaintainModule"
 Publish-Module -Path $ModulePath -NuGetApiKey $Env:PSGALLERY
