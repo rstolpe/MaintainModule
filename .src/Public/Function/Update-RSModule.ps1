@@ -27,7 +27,7 @@
         If you use this switch and the modules that are specified in the Module parameter are not installed on the system they will be installed.
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI", "ImportExcel" -Scope CurrentUser
+        Update-RSModule -Module "PowerCLI", "ImportExcel" -Scope "CurrentUser"
         # This will update the modules PowerCLI, ImportExcel for the current user
 
         .EXAMPLE
