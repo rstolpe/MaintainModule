@@ -20,7 +20,7 @@
         .EXAMPLE
         Uninstall-RSModule
         # This will uninstall all older versions of all modules in the system
-        
+
         .LINK
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
@@ -53,11 +53,10 @@
     }
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
-        $OldModule = $Module.Split(",").Trim()
-        [System.Collections.ArrayList]$Module = @()
+        [void]($Module = [System.Collections.ArrayList]::new())
 
         Write-Verbose "Looking so the modules exists in the system..."
-        foreach ($m in $OldModule) {
+        foreach ($m in $Module) {
             if ($m -in $InstalledModules.name) {
                 Write-Verbose "$m did exists in the system..."
                 [void]($Module.Add($m))
