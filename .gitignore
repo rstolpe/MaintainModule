@@ -33,6 +33,3 @@ obj/
 .vscode/
 .idea/
 license/
-
-RSModuleBuilder.ps1
-MaintainModule.psd1.source
