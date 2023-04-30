@@ -55,17 +55,17 @@
         Write-Verbose "Looking so the modules exists in the system..."
         foreach ($m in $OldModule) {
             if ($m -in $InstalledModules.name) {
-                Write-Verbose "$($m) did exists in the system..."
+                Write-Verbose "$m did exists in the system..."
                 [void]($Module.Add($m))
             }
             else {
-                Write-Warning "$($m) did not exists in the system, skipping this module..."
+                Write-Warning "$m did not exists in the system, skipping this module..."
             }
         }
     }
 
     foreach ($m in $Module) {
-        Write-Verbose "Collecting all installed version of the module $($m)"
+        Write-Verbose "Collecting all installed version of the module $m"
         $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -ExpandProperty Version
 
         # If the module has more then one version loop trough the versions and only keep the most current one
@@ -74,9 +74,9 @@
             [version]$MostRecentVersion = $GetAllInstalledVersions[0]
             Foreach ($Version in $GetAllInstalledVersions | Where-Object { [version]$_ -lt [version]$MostRecentVersion }) {
                 try {
-                    Write-Output "Uninstalling previous version $($Version) of module $($m)..."
+                    Write-Output "Uninstalling previous version $Version of module $m..."
                     Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                    Write-Output "Version $($Version) of $($m) are now uninstalled!"
+                    Write-Output "Version $Version of $m are now uninstalled!"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -84,10 +84,10 @@
                 }
             }
             # bygga in en check så att den verkligen kan verifiera detta
-            Write-Output "All older versions of $($m) are now uninstalled, the only installed version of $($m) is $($MostRecentVersion)"
+            Write-Output "All older versions of $m are now uninstalled, the only installed version of $m is $MostRecentVersion"
         }
         else {
-            Write-Verbose "$($m) don't have any older versions installed then $($GetAllInstalledVersions), no need to uninstall anything."
+            Write-Verbose "$m don't have any older versions installed then $GetAllInstalledVersions, no need to uninstall anything."
         }
     }
     Write-Output "`n=== \\\ Script Finished! /// ===`n"

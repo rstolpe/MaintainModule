@@ -78,17 +78,17 @@ Function Uninstall-RSModule {
         Write-Verbose "Looking so the modules exists in the system..."
         foreach ($m in $OldModule) {
             if ($m -in $InstalledModules.name) {
-                Write-Verbose "$($m) did exists in the system..."
+                Write-Verbose "$m did exists in the system..."
                 [void]($Module.Add($m))
             }
             else {
-                Write-Warning "$($m) did not exists in the system, skipping this module..."
+                Write-Warning "$m did not exists in the system, skipping this module..."
             }
         }
     }
 
     foreach ($m in $Module) {
-        Write-Verbose "Collecting all installed version of the module $($m)"
+        Write-Verbose "Collecting all installed version of the module $m"
         $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -ExpandProperty Version
 
         # If the module has more then one version loop trough the versions and only keep the most current one
@@ -97,9 +97,9 @@ Function Uninstall-RSModule {
             [version]$MostRecentVersion = $GetAllInstalledVersions[0]
             Foreach ($Version in $GetAllInstalledVersions | Where-Object { [version]$_ -lt [version]$MostRecentVersion }) {
                 try {
-                    Write-Output "Uninstalling previous version $($Version) of module $($m)..."
+                    Write-Output "Uninstalling previous version $Version of module $m..."
                     Uninstall-Module -Name $m -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                    Write-Output "Version $($Version) of $($m) are now uninstalled!"
+                    Write-Output "Version $Version of $m are now uninstalled!"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -107,10 +107,10 @@ Function Uninstall-RSModule {
                 }
             }
             # bygga in en check så att den verkligen kan verifiera detta
-            Write-Output "All older versions of $($m) are now uninstalled, the only installed version of $($m) is $($MostRecentVersion)"
+            Write-Output "All older versions of $m are now uninstalled, the only installed version of $m is $MostRecentVersion"
         }
         else {
-            Write-Verbose "$($m) don't have any older versions installed then $($GetAllInstalledVersions), no need to uninstall anything."
+            Write-Verbose "$m don't have any older versions installed then $GetAllInstalledVersions, no need to uninstall anything."
         }
     }
     Write-Output "`n=== \\\ Script Finished! /// ===`n"
@@ -214,7 +214,7 @@ Function Update-RSModule {
                     [void]($Module.Add($m))
                 }
                 else {
-                    Write-Warning "$($m) did not exists in the system, skipping this module..."
+                    Write-Warning "$m did not exists in the system, skipping this module..."
                 }
             }
         }
@@ -243,25 +243,25 @@ Function Update-RSModule {
 
     # Start looping trough every module that are stored in the string Module
     foreach ($m in $Module) {
-        Write-Verbose "Checks if $($m) are installed"
+        Write-Verbose "Checks if $m are installed"
         if ($m -in $InstalledModules.Name) {
 
             # Getting the latest installed version of the module
-            Write-Verbose "Collecting all installed version of $($m)..."
+            Write-Verbose "Collecting all installed version of $m..."
             $GetAllInstalledVersions = Get-InstalledModule -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version
             [version]$LatestInstalledVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
 
             # Collects the latest version of module from the source where the module was installed from
-            Write-Verbose "Looking up the latest version of $($m)..."
+            Write-Verbose "Looking up the latest version of $m..."
             [version]$CollectLatestVersion = $(Find-Module -Name $m -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version -First 1).version
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
             if ($LatestInstalledVersion -lt $CollectLatestVersion) {
                 try {
-                    Write-Output "Found a newer version of $($m), version $($CollectLatestVersion)"
-                    Write-Output "Updating $($m) from $($LatestInstalledVersion) to version $($CollectLatestVersion)..."
-                    Update-Module -Name $($m) -Scope $Scope -Force
-                    Write-Output "$($m) has now been updated to version $($CollectLatestVersion)!`n"
+                    Write-Output "Found a newer version of $m, version $CollectLatestVersion"
+                    Write-Output "Updating $m from $($LatestInstalledVersion) to version $CollectLatestVersion..."
+                    Update-Module -Name $m -Scope $Scope -Force
+                    Write-Output "$m has now been updated to version $CollectLatestVersion!`n"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -272,21 +272,21 @@ Function Update-RSModule {
             # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
             if ($UninstallOldVersion -eq $true) {
                 if ($GetAllInstalledVersions.Count -gt 1) {
-                    Write-Output "Uninstalling old versions $($LatestInstalledVersion) of $($m)..."
+                    Write-Output "Uninstalling old versions $LatestInstalledVersion of $m..."
                     Uninstall-RSModule -Module $m
                 }
             }
             else {
-                Write-Verbose "$($m) already has the newest version installed, no need to install anything!"
+                Write-Verbose "$m already has the newest version installed, no need to install anything!"
             }
         }
         else {
             # If the switch InstallMissing are set to true the modules will get installed if they are missing
             if ($InstallMissing -eq $true) {
                 try {
-                    Write-Output "$($m) are not installed, installing $($m)..."
-                    Install-Module -Name $($m) -Scope $Scope -Force
-                    Write-Output "$($m) has now been installed!"
+                    Write-Output "$m are not installed, installing $m..."
+                    Install-Module -Name $m -Scope $Scope -Force
+                    Write-Output "$m has now been installed!"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -294,7 +294,7 @@ Function Update-RSModule {
                 }
             }
             else {
-                Write-Warning "$($m) module are not installed, and you have not chosen to install missing modules. Continuing without any actions!"
+                Write-Warning "$m module are not installed, and you have not chosen to install missing modules. Continuing without any actions!"
             }
         }
     }
@@ -308,13 +308,13 @@ Function Update-RSModule {
             Write-Verbose "Starting to import the modules..."
             foreach ($m in $Module) {
                 if ($m -in $ImportedModules.Name) {
-                    Write-Verbose "$($m) are already imported!"
+                    Write-Verbose "$m are already imported!"
                 }
                 else {
                     try {
-                        Write-Output "Importing $($m)..."
+                        Write-Output "Importing $m..."
                         Import-Module -Name $m -Force
-                        Write-Output "$($m) has been imported!"
+                        Write-Output "$m has been imported!"
                     }
                     catch {
                         Write-Error "$($PSItem.Exception)"
