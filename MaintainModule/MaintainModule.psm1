@@ -40,6 +40,10 @@ Function Uninstall-RSModule {
         Uninstall-RSModule -Module "VMWare.PowerCLI", "ImportExcel"
         # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
 
+        .EXAMPLE
+        Uninstall-RSModule
+        # This will uninstall all older versions of all modules in the system
+
         .LINK
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
@@ -55,7 +59,7 @@ Function Uninstall-RSModule {
 
     [CmdletBinding(SupportsShouldProcess)]
     Param(
-        [Parameter(Mandatory = $false, HelpMessage = "Enter the module or modules (separated with ,) you want to uninstall")]
+        [Parameter(Mandatory = $false, HelpMessage = "Enter the module or modules you want to uninstall older version of, if not used all older versions will be uninstalled")]
         [string[]]$Module
     )
 
@@ -72,11 +76,10 @@ Function Uninstall-RSModule {
     }
     else {
         Write-Verbose "User has added modules to the Module parameter, splitting them"
-        $OldModule = $Module.Split(",").Trim()
-        [System.Collections.ArrayList]$Module = @()
+        [void]($Module = [System.Collections.ArrayList]::new())
 
         Write-Verbose "Looking so the modules exists in the system..."
-        foreach ($m in $OldModule) {
+        foreach ($m in $Module) {
             if ($m -in $InstalledModules.name) {
                 Write-Verbose "$m did exists in the system..."
                 [void]($Module.Add($m))
