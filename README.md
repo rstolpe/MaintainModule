@@ -6,7 +6,7 @@
 # MaintainModule
 This module let you update all of your installed modules and also uninstall the old versions to keep things clean.  
 You can also specify module or modules that you want to update. It's also possible to install the module if it's missing and import the modules in the end of the script.  
-I have added the result from PSScriptAnalyzer in [test folder](https://github.com/rstolpe/MaintainModule/tree/main/test) 
+Works on all OS versions.
 
 ## This module can do the following
 - Checks so TLS 1.2 are used by PowerShell
@@ -17,6 +17,9 @@ I have added the result from PSScriptAnalyzer in [test folder](https://github.co
 - If specified module are missing you can choose to install it
 - Import specified modules in the end of the script
 
+## Dependencies
+- Module also require that you have my service module installed, [rsServiceModule](https://github.com/rstolpe/rsServiceModule)
+
 # Links
 * [My PowerShell Collection](https://github.com/rstolpe/PSCollection)
 * [Webpage/Blog](https://www.stolpe.io)
@@ -24,9 +27,6 @@ I have added the result from PSScriptAnalyzer in [test folder](https://github.co
 * [LinkedIn](https://www.linkedin.com/in/rstolpe/)
 * [PowerShell Gallery](https://www.powershellgallery.com/profiles/rstolpe)
 
-# Help
-Below I have specified things that I think will help people with this module.  
-You can also see the API for each function in the [help folder](https://github.com/rstolpe/MaintainModule/tree/main/help)
 
 ## Notes
 The parameter -Scope don't effect the uninstall-module function this is because of limitation from Microsoft.  
