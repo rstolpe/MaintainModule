@@ -1,7 +1,7 @@
 ﻿<#
     MIT License
 
-    Copyright (C) 2023 Robin Stolpe.
+    Copyright (C) 2024 Robin Stolpe.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -60,63 +60,122 @@ Function Uninstall-RSModule {
     [CmdletBinding(SupportsShouldProcess)]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter the module or modules you want to uninstall older version of, if not used all older versions will be uninstalled")]
+        [string]$Module,
+        [Parameter(Mandatory = $false, HelpMessage = ".")]
+        [string[]]$OldVersion
+    )
+
+    Write-Output "START - Uninstall older versions of $($Module)"
+    Write-Output "Please wait, this can take some time..."
+
+    foreach ($_version in $OldVersion) {
+        Write-Verbose "Uninstalling version $($_version) of $($Module)..."
+        try {
+            Uninstall-Module -Name $Module -RequiredVersion $_version -Force -ErrorAction SilentlyContinue
+        }
+        catch {
+            Write-Error "$($PSItem.Exception)"
+            continue
+        }
+    }
+    Write-Output "FINISHED - All older versions of $($Module) are now uninstalled!"
+}
+Function Get-rsInstalledModules {
+    [CmdletBinding(SupportsShouldProcess)]
+    Param(
+        [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules that you want to update, if you don't enter any, all of the modules will be updated")]
         [string[]]$Module
     )
 
-    Write-Output "`n=== Starting to uninstall older versions of modules ===`n"
-    Write-Output "Please wait, this can take some time..."
+    $ReturnCode = 0
+    $ReturnData = [ordered]@{}
 
+    # Collect all installed modules from the system
     Write-Verbose "Caching all installed modules from the system..."
-    $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
+    $GetInstalledModules = Get-InstalledModule | Select-Object Name | Sort-Object -Descending
 
-    # If Module parameter is empty populate it with all modules that are installed on the system
     if ([string]::IsNullOrEmpty($Module)) {
-        Write-Verbose "Parameter Module are empty populate it with all installed modules from the system..."
-        $Module = $InstalledModules.Name
+        Write-Verbose "Parameter Module are empty, populate it with all installed modules from the system..."
+        $ReturnModule = foreach ($_module in $GetInstalledModules) {
+            Write-Verbose "Collecting information about module $($_module)..."
+            $GetAllInstalledVersions = Get-InstalledModule -Name $_module.name -AllVersions | Sort-Object { $_.Version -as [version] } -Descending
+
+            # Get latest version
+            [version]$LatestVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
+
+            # Get get all old versions
+            [version]$OldVersions = $GetAllInstalledVersions | Where-Object { $_.Version -ne $LatestVersion } | Select-Object Version
+
+            [PSCustomObject]@{
+                Name          = $_module.Name
+                Repository    = $GetAllInstalledVersions.Repository
+                OldVersion    = $OldVersions
+                LatestVersion = $LatestVersion
+            }
+        }
     }
     else {
-        Write-Verbose "User has added modules to the Module parameter, splitting them"
-        [void]($Module = [System.Collections.ArrayList]::new())
-
         Write-Verbose "Looking so the modules exists in the system..."
-        foreach ($_module in $Module) {
-            if ($_module -in $InstalledModules.name) {
-                Write-Verbose "$($_module) did exists in the system..."
-                [void]($Module.Add($_module))
+        $ReturnModule = foreach ($_module in $Module) {
+            if ($_module -in $GetInstalledModules.name) {
+                Write-Verbose "$($_module) is installed, collecting information about it..."
+                $GetAllInstalledVersions = Get-InstalledModule -Name $_module -AllVersions | Sort-Object { $_.Version -as [version] } -Descending
+
+                # Get latest version
+                [version]$LatestVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
+
+                # Get get all old versions
+                [version]$OldVersions = $GetAllInstalledVersions | Where-Object { $_.Version -ne $LatestVersion } | Select-Object Version
+
+                [PSCustomObject]@{
+                    Name          = $_module
+                    Repository    = $GetAllInstalledVersions.Repository
+                    OldVersion    = $OldVersions
+                    LatestVersion = $LatestVersion
+                }
             }
             else {
-                Write-Warning "$($_module) did not exists in the system, skipping this module..."
+                Write-Warning "$($_module) is not installed, skipping this module..."
             }
         }
     }
 
-    foreach ($_module in $Module) {
-        Write-Verbose "Collecting all installed version of the module $($_module)"
-        $GetAllInstalledVersions = Get-InstalledModule -Name $_module -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object -ExpandProperty Version
+    if ($null -eq $ReturnModule) {
+        $ReturnCode = 1
+        Write-Warning "No modules was found..."
+        $ReturnModule = $null
+    }
 
-        # If the module has more then one version loop trough the versions and only keep the most current one
-        if ($GetAllInstalledVersions.Count -gt 0) {
-            $MostRecentVersion = $null
-            [version]$MostRecentVersion = $GetAllInstalledVersions[0]
-            Foreach ($Version in $GetAllInstalledVersions | Where-Object { [version]$_ -lt [version]$MostRecentVersion }) {
-                try {
-                    Write-Output "Uninstalling previous version $Version of module $($_module)..."
-                    Uninstall-Module -Name $_module -RequiredVersion $Version -Force -ErrorAction SilentlyContinue
-                    Write-Output "Version $Version of $($_module) are now uninstalled!"
-                }
-                catch {
-                    Write-Error "$($PSItem.Exception)"
-                    continue
-                }
-            }
-            # bygga in en check så att den verkligen kan verifiera detta
-            Write-Output "All older versions of $($_module) are now uninstalled, the only installed version of $($_module) is $MostRecentVersion"
+    $ReturnData.Add("ReturnCode", $ReturnCode)
+    $ReturnData.Add("Module", $ReturnModule)
+    
+    return $ReturnData
+}
+Function Get-rsComponents {
+    [CmdletBinding(SupportsShouldProcess)]
+    Param(
+
+    )
+
+    # Making sure that TLS 1.2 is used.
+    Write-Verbose "Making sure that TLS 1.2 is used..."
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
+    # Checking if PSGallery are set to trusted
+    Write-Verbose "Checking if PowerShell Gallery are set to trusted..."
+    if ((Get-PSRepository -name PSGallery | Select-Object InstallationPolicy -ExpandProperty InstallationPolicy) -eq "Untrusted") {
+        try {
+            Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+            Write-Output "PowerShell Gallery was not set as trusted, it's now set as trusted!"
         }
-        else {
-            Write-Verbose "$($_module) don't have any older versions installed then $GetAllInstalledVersions, no need to uninstall anything."
+        catch {
+            Write-Error "$($PSItem.Exception)"
+            continue
         }
     }
-    Write-Output "`n=== \\\ Script Finished! /// ===`n"
+    else {
+        Write-Verbose "PowerShell Gallery was already set to trusted, continuing!"
+    }
 }
 Function Update-RSModule {
     <#
@@ -187,121 +246,102 @@ Function Update-RSModule {
         [Parameter(Mandatory = $false, HelpMessage = "Uninstalls all old versions of the modules")]
         [switch]$UninstallOldVersion = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Install all of the modules that has been entered in module that are not installed on the system")]
-        [switch]$InstallMissing = $false
+        [switch]$InstallMissing = $false,
+        [Parameter(Mandatory = $false, HelpMessage = "Don't check publishers certificate")]
+        [switch]$SkipPublisherCheck = $false,
+        [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
+        [bool]$AllowPrerelease = $false
     )
 
-    Write-Output "`n=== Starting module maintenance ===`n"
-    Write-Output "Please wait, this can take some time..."
+    Write-Output "`n=== Module Maintenance - Stolpe.io 2024 ==="
+    Write-Output "Please wait, this can take some time...`n"
+
+    # Making sure that all needed components are installed
+    Get-rsComponents
+
+    Write-Output "START - Updating modules`n"
 
     # Collect all installed modules from the system
-    Write-Verbose "Caching all installed modules from the system..."
-    $InstalledModules = Get-InstalledModule | Select-Object Name, Version | Sort-Object Name
-    $EmptyModule = $false
-
-    # If Module parameter is empty populate it with all modules that are installed on the system
-    if ([string]::IsNullOrEmpty($Module)) {
-        Write-Verbose "Parameter Module are empty populate it with all installed modules from the system..."
-        $EmptyModule = $true
-        $Module = $InstalledModules.Name
-    }
-    else {
-        Write-Verbose "User has added modules to the Module parameter, splitting them"
-        $OldModule = $Module.Split(",").Trim()
-        [System.Collections.ArrayList]$Module = @()
-
-        if ($InstallMissing -eq $false) {
-            Write-Verbose "Looking so the modules exists in the system..."
-            foreach ($_module in $OldModule) {
-                if ($_module -in $InstalledModules.name) {
-                    Write-Verbose "$($_module) did exists in the system..."
-                    [void]($Module.Add($_module))
-                }
-                else {
-                    Write-Warning "$($_module) did not exists in the system, skipping this module..."
-                }
-            }
-        }
-    }
-
-    # Making sure that TLS 1.2 is used.
-    Write-Verbose "Making sure that TLS 1.2 is used..."
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-
-    # Checking if PSGallery are set to trusted
-    Write-Verbose "Checking if PowerShell Gallery are set to trusted..."
-    if ((Get-PSRepository -name PSGallery | Select-Object InstallationPolicy -ExpandProperty InstallationPolicy) -eq "Untrusted") {
-        try {
-            Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-            Write-Output "PowerShell Gallery was not set as trusted, it's now set as trusted!"
-        }
-        catch {
-            Write-Error "$($PSItem.Exception)"
-            continue
-        }
-    }
-    else {
-        Write-Verbose "PowerShell Gallery was already set to trusted, continuing!"
-    }
-
+    $GetModuleInfo = Get-rsInstalledModules -Module $Module
 
     # Start looping trough every module that are stored in the string Module
-    foreach ($_module in $Module) {
-        Write-Verbose "Checks if $($_module) are installed"
-        if ($_module -in $InstalledModules.Name) {
-
+    if ($GetModuleInfo.ReturnCode -eq 0) {
+        foreach ($_module in $GetModuleInfo.Module) {
             # Getting the latest installed version of the module
-            Write-Verbose "Collecting all installed version of $($_module)..."
-            $GetAllInstalledVersions = Get-InstalledModule -Name $_module -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version
-            [version]$LatestInstalledVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
+            Write-Verbose "Collecting all installed version of $($_module.Name)..."
 
             # Collects the latest version of module from the source where the module was installed from
             Write-Verbose "Looking up the latest version of $($_module)..."
-            [version]$CollectLatestVersion = $(Find-Module -Name $_module -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version -First 1).version
+            [version]$CollectLatestVersion = $(Find-Module -Name $_module.Name -Repository $_module.Repository -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version -First 1).version
 
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
-            if ($LatestInstalledVersion -lt $CollectLatestVersion) {
+            if ($_module.LatestVersion -lt $CollectLatestVersion) {
                 try {
-                    Write-Output "Found a newer version of $($_module), version $CollectLatestVersion"
-                    Write-Output "Updating $($_module) from $($LatestInstalledVersion) to version $CollectLatestVersion..."
-                    Update-Module -Name $_module -Scope $Scope -Force
-                    Write-Output "$($_module) has now been updated to version $CollectLatestVersion!`n"
+                    # Variable to store warnings
+                    $warnings = @()
+                    
+                    Write-Output "Found a newer version of $($_module.Name), version $CollectLatestVersion"
+                    Write-Output "Updating $($_module.Name) from $($_module.LatestVersion) to version $CollectLatestVersion..."
+                    Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force -WarningVariable warnings -ErrorAction SilentlyContinue
+                    Write-Output "$($_module.Name) has now been updated to version $CollectLatestVersion!`n"
+
+                    if ($null -ne $warnings) {
+                        # Filter warnings related to certificate issues and get module names
+                        $certificateIssues = $warnings | Where-Object {
+                            $_.Message -match "certificate" -or $_.Message -match "publisher"
+                        }
+
+                        # Extract module names from the warnings
+                        $modulesWithCertificateIssues = $certificateIssues | ForEach-Object {
+                            # Attempt to extract module name from warning message, assuming a standard format
+                            if ($_ -match "Module \'(.*?)\'") {
+                                $matches[1]
+                            }
+                        }
+
+                        Write-OutPut "Following modules could not be updated because of the certificate $($modulesWithCertificateIssues -as [string])"
+                        Write-OutPut "certificateIssues $($certificateIssues -as [string])"
+                    }
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
                     continue
                 }
+            }
+            else {
+                Write-Verbose "$($_module.Name) are already up to date!"
             }
 
             # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
-            if ($UninstallOldVersion -eq $true) {
-                if ($GetAllInstalledVersions.Count -gt 1) {
-                    Write-Output "Uninstalling old versions $LatestInstalledVersion of $($_module)..."
-                    Uninstall-RSModule -Module $_module
-                }
+            <# if ($UninstallOldVersion -eq $true -and $_module.OldVersion.Count -gt 0) {
+                Uninstall-RSModule -Module $_module.Name -OldVersion $_module.OldVersion
             }
             else {
-                Write-Verbose "$($_module) already has the newest version installed, no need to install anything!"
-            }
-        }
-        else {
-            # If the switch InstallMissing are set to true the modules will get installed if they are missing
-            if ($InstallMissing -eq $true) {
-                try {
-                    Write-Output "$($_module) are not installed, installing $($_module)..."
-                    Install-Module -Name $_module -Scope $Scope -Force
-                    Write-Output "$($_module) has now been installed!"
-                }
-                catch {
-                    Write-Error "$($PSItem.Exception)"
-                    continue
-                }
-            }
-            else {
-                Write-Warning "$($_module) module are not installed, and you have not chosen to install missing modules. Continuing without any actions!"
-            }
+                Write-Verbose "$($_module.Name) don't have any older versions to uninstall!"
+            }#>
         }
     }
-    if ($EmptyModule -eq $false) {
+    <#
+    Install module if they want that 
+                else {
+                # If the switch InstallMissing are set to true the modules will get installed if they are missing
+                if ($InstallMissing -eq $true) {
+                    try {
+                        Write-Output "$($_module) are not installed, installing $($_module)..."
+                        Install-Module -Name $_module -Scope $Scope -Force
+                        Write-Output "$($_module) has now been installed!"
+                    }
+                    catch {
+                        Write-Error "$($PSItem.Exception)"
+                        continue
+                    }
+                }
+                else {
+                    Write-Warning "$($_module) module are not installed, and you have not chosen to install missing modules. Continuing without any actions!"
+                }
+            }
+    #>
+    else {
         if ($ImportModule -eq $true) {
             # Collect all of the imported modules.
             Write-Verbose "Collecting all of the installed modules..."
