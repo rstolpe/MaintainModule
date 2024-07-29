@@ -21,7 +21,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 #>
-Function Uninstall-RSModule {
+Function Uninstall-rsModule {
     <#
         .SYNOPSIS
         Uninstall older versions of your modules in a easy way.
@@ -33,15 +33,15 @@ Function Uninstall-RSModule {
         Specify modules that you want to uninstall older versions from, if this is left empty all of the older versions of the systems modules will be uninstalled
 
         .EXAMPLE
-        Uninstall-RSModule -Module "VMWare.PowerCLI"
+        Uninstall-rsModule -Module "VMWare.PowerCLI"
         # This will uninstall all older versions of the module VMWare.PowerCLI system.
 
         .EXAMPLE
-        Uninstall-RSModule -Module "VMWare.PowerCLI", "ImportExcel"
+        Uninstall-rsModule -Module "VMWare.PowerCLI", "ImportExcel"
         # This will uninstall all older versions of VMWare.PowerCLI and ImportExcel from the system.
 
         .EXAMPLE
-        Uninstall-RSModule
+        Uninstall-rsModule
         # This will uninstall all older versions of all modules in the system
 
         .LINK
@@ -80,7 +80,7 @@ Function Uninstall-RSModule {
     }
     Write-Output "FINISHED - All older versions of $($Module) are now uninstalled!"
 }
-Function Get-rsInstalledModules {
+Function Get-rsInstalledModule {
     [CmdletBinding(SupportsShouldProcess)]
     Param(
         [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules that you want to update, if you don't enter any, all of the modules will be updated")]
@@ -151,7 +151,7 @@ Function Get-rsInstalledModules {
     
     return $ReturnData
 }
-Function Get-rsComponents {
+Function Test-rsComponent {
     [CmdletBinding(SupportsShouldProcess)]
     Param(
 
@@ -177,7 +177,7 @@ Function Get-rsComponents {
         Write-Verbose "PowerShell Gallery was already set to trusted, continuing!"
     }
 }
-Function Update-RSModule {
+Function Update-rsModule {
     <#
         .SYNOPSIS
         This module let you maintain your installed modules in a easy way.
@@ -206,19 +206,19 @@ Function Update-RSModule {
         If you use this switch and the modules that are specified in the Module parameter are not installed on the system they will be installed.
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI", "ImportExcel" -Scope "CurrentUser"
+        Update-rsModule -Module "PowerCLI", "ImportExcel" -Scope "CurrentUser"
         # This will update the modules PowerCLI, ImportExcel for the current user
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI", "ImportExcel" -UninstallOldVersion
+        Update-rsModule -Module "PowerCLI", "ImportExcel" -UninstallOldVersion
         # This will update the modules PowerCLI, ImportExcel and delete all of the old versions that are installed of PowerCLI, ImportExcel.
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI", "ImportExcel" -InstallMissing
+        Update-rsModule -Module "PowerCLI", "ImportExcel" -InstallMissing
         # This will install the modules PowerCLI and/or ImportExcel on the system if they are missing, if the modules are installed already they will only get updated.
 
         .EXAMPLE
-        Update-RSModule -Module "PowerCLI", "ImportExcel" -UninstallOldVersion -ImportModule
+        Update-rsModule -Module "PowerCLI", "ImportExcel" -UninstallOldVersion -ImportModule
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
 
         .LINK
@@ -257,12 +257,12 @@ Function Update-RSModule {
     Write-Output "Please wait, this can take some time...`n"
 
     # Making sure that all needed components are installed
-    Get-rsComponents
+    Test-rsComponent
 
     Write-Output "START - Updating modules`n"
 
     # Collect all installed modules from the system
-    $GetModuleInfo = Get-rsInstalledModules -Module $Module
+    $GetModuleInfo = Get-rsInstalledModule -Module $Module
 
     # Start looping trough every module that are stored in the string Module
     if ($GetModuleInfo.ReturnCode -eq 0) {
@@ -279,7 +279,7 @@ Function Update-RSModule {
                 try {
                     # Variable to store warnings
                     $warnings = @()
-                    
+
                     Write-Output "Found a newer version of $($_module.Name), version $CollectLatestVersion"
                     Write-Output "Updating $($_module.Name) from $($_module.LatestVersion) to version $CollectLatestVersion..."
                     Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force -WarningVariable warnings -ErrorAction SilentlyContinue
@@ -314,7 +314,7 @@ Function Update-RSModule {
 
             # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
             <# if ($UninstallOldVersion -eq $true -and $_module.OldVersion.Count -gt 0) {
-                Uninstall-RSModule -Module $_module.Name -OldVersion $_module.OldVersion
+                Uninstall-rsModule -Module $_module.Name -OldVersion $_module.OldVersion
             }
             else {
                 Write-Verbose "$($_module.Name) don't have any older versions to uninstall!"
