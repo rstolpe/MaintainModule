@@ -313,12 +313,12 @@ Function Update-rsModule {
             }
 
             # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
-            <# if ($UninstallOldVersion -eq $true -and $_module.OldVersion.Count -gt 0) {
+            if ($UninstallOldVersion -eq $true -and $_module.OldVersion.Count -gt 0) {
                 Uninstall-rsModule -Module $_module.Name -OldVersion $_module.OldVersion
             }
             else {
                 Write-Verbose "$($_module.Name) don't have any older versions to uninstall!"
-            }#>
+            }
         }
     }
     <#
