@@ -321,51 +321,49 @@ Function Update-rsModule {
             }
         }
     }
-    <#
-    Install module if they want that 
-                else {
-                # If the switch InstallMissing are set to true the modules will get installed if they are missing
-                if ($InstallMissing -eq $true) {
-                    try {
-                        Write-Output "$($_module) are not installed, installing $($_module)..."
-                        Install-Module -Name $_module -Scope $Scope -Force
-                        Write-Output "$($_module) has now been installed!"
-                    }
-                    catch {
-                        Write-Error "$($PSItem.Exception)"
-                        continue
-                    }
-                }
-                else {
-                    Write-Warning "$($_module) module are not installed, and you have not chosen to install missing modules. Continuing without any actions!"
-                }
-            }
-    #>
+    #Install module if they want that 
     else {
-        if ($ImportModule -eq $true) {
-            # Collect all of the imported modules.
-            Write-Verbose "Collecting all of the installed modules..."
-            $ImportedModules = Get-Module | Select-Object Name, Version
+        # If the switch InstallMissing are set to true the modules will get installed if they are missing
+        if ($InstallMissing -eq $true) {
+            try {
+                Write-Output "$($_module.name) are not installed, installing $($_module.name)..."
+                Install-Module -Name $_module.name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force
+                Write-Output "$($_module.name) has now been installed!"
+            }
+            catch {
+                Write-Error "$($PSItem.Exception)"
+                continue
+            }
+        }
+        else {
+            Write-Verbose "$($_module.name) are not installed, you have not chosen to install missing modules"
+        }
+    }
+    
+    <#if ($ImportModule -eq $true) {
+        # Collect all of the imported modules.
+        Write-Verbose "Collecting all of the installed modules..."
+        $ImportedModules = Get-Module | Select-Object Name, Version
 
-            # Import module if it's not imported
-            Write-Verbose "Starting to import the modules..."
-            foreach ($_module in $Module) {
-                if ($_module -in $ImportedModules.Name) {
-                    Write-Verbose "$($_module) are already imported!"
+        # Import module if it's not imported
+        Write-Verbose "Starting to import the modules..."
+        foreach ($_module in $Module) {
+            if ($_module -in $ImportedModules.Name) {
+                Write-Verbose "$($_module) are already imported!"
+            }
+            else {
+                try {
+                    Write-Output "Importing $($_module)..."
+                    Import-Module -Name $_module -Force
+                    Write-Output "$($_module) has been imported!"
                 }
-                else {
-                    try {
-                        Write-Output "Importing $($_module)..."
-                        Import-Module -Name $_module -Force
-                        Write-Output "$($_module) has been imported!"
-                    }
-                    catch {
-                        Write-Error "$($PSItem.Exception)"
-                        continue
-                    }
+                catch {
+                    Write-Error "$($PSItem.Exception)"
+                    continue
                 }
             }
         }
-    }
+    }#>
+
     Write-Output "`n=== \\\ Script Finished! /// ===`n"
 }
