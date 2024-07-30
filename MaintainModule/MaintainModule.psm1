@@ -195,10 +195,6 @@ Function Update-rsModule {
         The parameter -Scope don't effect the uninstall-module function this is because of limitation from Microsoft.
         - Scope effect Install/update module function.
 
-        .PARAMETER ImportModule
-        If this switch are used the module will import all the modules that are specified in the Module parameter at the end of the script.
-        This only works if you have specified modules in the Module parameter
-
         .PARAMETER UninstallOldVersion
         If this switch are used all of the old versions of your modules will get uninstalled and only the current version will be installed
 
@@ -241,8 +237,6 @@ Function Update-rsModule {
         [Parameter(Mandatory = $false, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules, default is CurrentUser")]
         [ValidateSet("CurrentUser", "AllUsers")]
         [string]$Scope = "CurrentUser",
-        [Parameter(Mandatory = $false, HelpMessage = "Import modules that has been entered in the module parameter at the end of this function")]
-        [switch]$ImportModule = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Uninstalls all old versions of the modules")]
         [switch]$UninstallOldVersion = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Install all of the modules that has been entered in module that are not installed on the system")]
@@ -317,31 +311,6 @@ Function Update-rsModule {
         }
         else {
             Write-Verbose "$($_module.name) are not installed, you have not chosen to install missing modules"
-        }
-    }
-    
-    if ($ImportModule -eq $true) {
-        # Collect all of the imported modules.
-        Write-Verbose "Collecting all of the installed modules..."
-        $ImportedModules = Get-Module | Select-Object Name, Version
-
-        # Import module if it's not imported
-        Write-Verbose "Starting to import the modules..."
-        foreach ($_module in $Module) {
-            if ($_module -in $ImportedModules.Name) {
-                Write-Verbose "$($_module) are already imported!"
-            }
-            else {
-                try {
-                    Write-Output "Importing $($_module)..."
-                    Import-Module -Name $_module -Force
-                    Write-Output "$($_module) has been imported!"
-                }
-                catch {
-                    Write-Error "$($PSItem.Exception)"
-                    continue
-                }
-            }
         }
     }
 
