@@ -320,7 +320,7 @@ Function Update-rsModule {
         }
     }
     
-    <#if ($ImportModule -eq $true) {
+    if ($ImportModule -eq $true) {
         # Collect all of the imported modules.
         Write-Verbose "Collecting all of the installed modules..."
         $ImportedModules = Get-Module | Select-Object Name, Version
@@ -343,7 +343,7 @@ Function Update-rsModule {
                 }
             }
         }
-    }#>
+    }
 
     Write-Output "`n=== \\\ Script Finished! /// ===`n"
 }
