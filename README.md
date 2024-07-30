@@ -6,7 +6,7 @@
 # MaintainModule
 This module let you update all of your installed modules and also uninstall the old versions to keep things clean.  
 You can also specify module or modules that you want to update. It's also possible to install the module if it's missing and import the modules in the end of the script.  
-I have added the result from PSScriptAnalyzer in [test folder](https://github.com/rstolpe/MaintainModule/tree/main/test) 
+Works on all OS versions.
 
 ## This module can do the following
 - Checks so TLS 1.2 are used by PowerShell
@@ -15,7 +15,11 @@ I have added the result from PSScriptAnalyzer in [test folder](https://github.co
 - Update specified modules
 - Uninstall old versions of the modules
 - If specified module are missing you can choose to install it
-- Import specified modules in the end of the script
+- Ignore SkipPublisherCheck
+- Update / install Pre-release
+
+## Dependencies
+- Module also require that you have my service module installed, [rsServiceModule](https://github.com/rstolpe/rsServiceModule)
 
 # Links
 * [My PowerShell Collection](https://github.com/rstolpe/PSCollection)
@@ -24,9 +28,6 @@ I have added the result from PSScriptAnalyzer in [test folder](https://github.co
 * [LinkedIn](https://www.linkedin.com/in/rstolpe/)
 * [PowerShell Gallery](https://www.powershellgallery.com/profiles/rstolpe)
 
-# Help
-Below I have specified things that I think will help people with this module.  
-You can also see the API for each function in the [help folder](https://github.com/rstolpe/MaintainModule/tree/main/help)
 
 ## Notes
 The parameter -Scope don't effect the uninstall-module function this is because of limitation from Microsoft.  
@@ -89,26 +90,8 @@ The parameter Module has support for multiple inputs, separate them with , for e
 You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
 If -Scope parameter are empty it will set it as CurrentUser as default.
 
-### Import modules in the end of the script
-You can choose to import all of the modules at the end of the script, this only works if you have specified module or modules in the Module parameter.
-````
-Update-RSModule -Module "VMWare.PowerCLI" -ImportModule
-````
-The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel", "VMWare.PowerCLI"```
-You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
-If -Scope parameter are empty it will set it as CurrentUser as default.
+### Allow pre-release
+If you want to allow pre-releases simply add ```-AllowPrerelease $true````
 
-## Uninstall-RSModule
-This function let you uninstall all of the older versions of your module or modules.
-### Uninstall all older version from all of your modules
-You can uninstall all of the older versions from one or more specific modules.
-````
-Uninstall-RSModule
-````
-
-### Uninstall all older versions from a specific module
-If you want to uninstall all older version of a specific module
-````
-Uninstall-RSModule -Module "ImportExcel"
-````
-The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel", "VMWare.PowerCLI"```
+### SkipPublisherCheck
+If you for some reason want to skip publisher check add ```-SkipPublisherCheck $true``` this is needed for Pester and PowerCLI for an example
