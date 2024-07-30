@@ -36,7 +36,7 @@
     RootModule        = '.\MaintainModule.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '2.1.0'
+    ModuleVersion     = '2.0'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -134,7 +134,7 @@
             ReleaseNotes             = 'https://github.com/rstolpe/MaintainModule/releases'
 
             # Prerelease string of this module
-            Prerelease               = ''
+            Prerelease               = 'b1'
 
             # Flag to indicate whether the module requires explicit user acceptance for install/update/save
             RequireLicenseAcceptance = $false
