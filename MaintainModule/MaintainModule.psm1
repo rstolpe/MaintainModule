@@ -201,6 +201,12 @@ Function Update-rsModule {
         .PARAMETER InstallMissing
         If you use this switch and the modules that are specified in the Module parameter are not installed on the system they will be installed.
 
+        .PARAMETER AllowPrerelease
+        If you set this to $true Pre-Releases are going to be installed / updated
+
+        .PARAMETER SkipPublisherCheck
+        If you set this to $true PublisherCheck will be ignored, this is something that for example are needed for Pester and PowerCLI because there certificate are not valid for some reason.
+
         .EXAMPLE
         Update-rsModule -Module "PowerCLI", "ImportExcel" -Scope "CurrentUser"
         # This will update the modules PowerCLI, ImportExcel for the current user
