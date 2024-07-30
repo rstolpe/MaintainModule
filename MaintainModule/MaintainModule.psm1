@@ -250,7 +250,7 @@ Function Update-rsModule {
         [Parameter(Mandatory = $false, HelpMessage = "Install all of the modules that has been entered in module that are not installed on the system")]
         [switch]$InstallMissing = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Don't check publishers certificate")]
-        [bool]$SkipPublisherCheck = $false,
+        [switch]$SkipPublisherCheck = $false,
         [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
         [bool]$AllowPrerelease = $false
     )
@@ -281,7 +281,12 @@ Function Update-rsModule {
                 try {
                     Write-Output "Found a newer version of $($_module.Name), version $CollectLatestVersion"
                     Write-Output "Updating $($_module.Name) from $($_module.LatestVersion) to version $CollectLatestVersion..."
-                    Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck:$SkipPublisherCheck -AcceptLicense -Force
+                    if ($SkipPublisherCheck -eq $true) {
+                        Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck -AcceptLicense -Force
+                    }
+                    else {
+                        Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force
+                    }
                     Write-Output "$($_module.Name) has now been updated to version $($CollectLatestVersion)!"
 
                     # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
@@ -309,7 +314,12 @@ Function Update-rsModule {
         if ($InstallMissing -eq $true) {
             try {
                 Write-Output "$($_module.name) are not installed, installing $($_module.name)..."
-                Install-Module -Name $_module.name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force
+                if ($SkipPublisherCheck -eq $true) {
+                    Install-Module -Name $_module.name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck -AcceptLicense -Force
+                }
+                else {
+                    Install-Module -Name $_module.name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force
+                }
                 Write-Output "$($_module.name) has now been installed!"
             }
             catch {
