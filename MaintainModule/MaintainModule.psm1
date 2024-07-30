@@ -62,7 +62,9 @@ Function Uninstall-rsModule {
         [Parameter(Mandatory = $false, HelpMessage = "Enter the module or modules you want to uninstall older version of, if not used all older versions will be uninstalled")]
         [string]$Module,
         [Parameter(Mandatory = $false, HelpMessage = ".")]
-        [string[]]$OldVersion
+        [string[]]$OldVersion,
+        [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
+        [bool]$AllowPrerelease = $false
     )
 
     Write-Output "START - Uninstall older versions of $($Module)"
@@ -71,7 +73,7 @@ Function Uninstall-rsModule {
     foreach ($_version in $OldVersion) {
         Write-Verbose "Uninstalling version $($_version) of $($Module)..."
         try {
-            Uninstall-Module -Name $Module -RequiredVersion $_version -Force -ErrorAction SilentlyContinue
+            Uninstall-Module -Name $Module -RequiredVersion $_version -AllowPrerelease:$AllowPrerelease -Force -ErrorAction SilentlyContinue
         }
         catch {
             Write-Error "$($PSItem.Exception)"
@@ -284,8 +286,8 @@ Function Update-rsModule {
 
                     # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
                     if ($UninstallOldVersion -eq $true -and $_module.OldVersion.Count -gt 0) {
-                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.OldVersion
-                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.LatestVersion
+                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.OldVersion -AllowPrerelease:$AllowPrerelease
+                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.LatestVersion -AllowPrerelease:$AllowPrerelease
                     }
                     else {
                         Write-Verbose "$($_module.Name) don't have any older versions to uninstall!"
