@@ -281,6 +281,15 @@ Function Update-rsModule {
                     Write-Output "Updating $($_module.Name) from $($_module.LatestVersion) to version $CollectLatestVersion..."
                     Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck:$SkipPublisherCheck -AcceptLicense -Force
                     Write-Output "$($_module.Name) has now been updated to version $($CollectLatestVersion)!"
+
+                    # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
+                    if ($UninstallOldVersion -eq $true -and $_module.OldVersion.Count -gt 0) {
+                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.OldVersion
+                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.LatestVersion
+                    }
+                    else {
+                        Write-Verbose "$($_module.Name) don't have any older versions to uninstall!"
+                    }
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
@@ -289,14 +298,6 @@ Function Update-rsModule {
             }
             else {
                 Write-Verbose "$($_module.Name) are already up to date!"
-            }
-
-            # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
-            if ($UninstallOldVersion -eq $true -and $_module.OldVersion.Count -gt 0) {
-                Uninstall-rsModule -Module $_module.Name -OldVersion $_module.OldVersion
-            }
-            else {
-                Write-Verbose "$($_module.Name) don't have any older versions to uninstall!"
             }
         }
     }
