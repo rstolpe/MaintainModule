@@ -90,26 +90,8 @@ The parameter Module has support for multiple inputs, separate them with , for e
 You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
 If -Scope parameter are empty it will set it as CurrentUser as default.
 
-### Import modules in the end of the script
-You can choose to import all of the modules at the end of the script, this only works if you have specified module or modules in the Module parameter.
-````
-Update-RSModule -Module "VMWare.PowerCLI" -ImportModule
-````
-The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel", "VMWare.PowerCLI"```
-You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
-If -Scope parameter are empty it will set it as CurrentUser as default.
+### Allow pre-release
+If you want to allow pre-releases simply add ```-AllowPrerelease $true````
 
-## Uninstall-RSModule
-This function let you uninstall all of the older versions of your module or modules.
-### Uninstall all older version from all of your modules
-You can uninstall all of the older versions from one or more specific modules.
-````
-Uninstall-RSModule
-````
-
-### Uninstall all older versions from a specific module
-If you want to uninstall all older version of a specific module
-````
-Uninstall-RSModule -Module "ImportExcel"
-````
-The parameter Module has support for multiple inputs, separate them with , for example ```-Module "ImportExcel", "VMWare.PowerCLI"```
+### SkipPublisherCheck
+If you for some reason want to skip publisher check add ```-SkipPublisherCheck $true``` this is needed for Pester and PowerCLI for an example
