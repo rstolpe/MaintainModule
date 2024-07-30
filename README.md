@@ -90,8 +90,8 @@ The parameter Module has support for multiple inputs, separate them with , for e
 You can also use the -Scope parameter if you want to change from CurrentUser to AllUsers, for example ```-Scope "AllUser"```  
 If -Scope parameter are empty it will set it as CurrentUser as default.
 
-### Allow pre-release
+### Allow pre-release (only exists in beta)
 If you want to allow pre-releases simply add ```-AllowPrerelease $true````
 
-### SkipPublisherCheck
+### SkipPublisherCheck (only exists in beta)
 If you for some reason want to skip publisher check add ```-SkipPublisherCheck $true``` this is needed for Pester and PowerCLI for an example
