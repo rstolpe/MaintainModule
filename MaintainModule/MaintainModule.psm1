@@ -125,7 +125,7 @@ Function Get-rsInstalledModule {
                 [version]$LatestVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
 
                 # Get get all old versions
-                [version]$OldVersions = $GetAllInstalledVersions | Where-Object { $_.Version -ne $LatestVersion } | Select-Object Version
+                [version]$OldVersions = $GetAllInstalledVersions | Where-Object { $_.Version -ne $LatestVersion } | Select-Object -ExpandProperty Version
 
                 [PSCustomObject]@{
                     Name          = $_module
