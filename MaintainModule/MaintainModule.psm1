@@ -248,7 +248,7 @@ Function Update-rsModule {
         [Parameter(Mandatory = $false, HelpMessage = "Install all of the modules that has been entered in module that are not installed on the system")]
         [switch]$InstallMissing = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Don't check publishers certificate")]
-        [switch]$SkipPublisherCheck = $false,
+        [bool]$SkipPublisherCheck = $false,
         [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
         [bool]$AllowPrerelease = $false
     )
@@ -277,31 +277,10 @@ Function Update-rsModule {
             # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
             if ($_module.LatestVersion -lt $CollectLatestVersion) {
                 try {
-                    # Variable to store warnings
-                    $warnings = @()
-
                     Write-Output "Found a newer version of $($_module.Name), version $CollectLatestVersion"
                     Write-Output "Updating $($_module.Name) from $($_module.LatestVersion) to version $CollectLatestVersion..."
-                    Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force -WarningVariable warnings -ErrorAction SilentlyContinue
-                    Write-Output "$($_module.Name) has now been updated to version $CollectLatestVersion!`n"
-
-                    if ($null -ne $warnings) {
-                        # Filter warnings related to certificate issues and get module names
-                        $certificateIssues = $warnings | Where-Object {
-                            $_.Message -match "certificate" -or $_.Message -match "publisher"
-                        }
-
-                        # Extract module names from the warnings
-                        $modulesWithCertificateIssues = $certificateIssues | ForEach-Object {
-                            # Attempt to extract module name from warning message, assuming a standard format
-                            if ($_ -match "Module \'(.*?)\'") {
-                                $matches[1]
-                            }
-                        }
-
-                        Write-OutPut "Following modules could not be updated because of the certificate $($modulesWithCertificateIssues -as [string])"
-                        Write-OutPut "certificateIssues $($certificateIssues -as [string])"
-                    }
+                    Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck:$SkipPublisherCheck -AcceptLicense -Force
+                    Write-Output "$($_module.Name) has now been updated to version $($CollectLatestVersion)!"
                 }
                 catch {
                     Write-Error "$($PSItem.Exception)"
