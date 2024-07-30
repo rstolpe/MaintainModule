@@ -97,7 +97,7 @@ Function Get-rsInstalledModule {
     if ([string]::IsNullOrEmpty($Module)) {
         Write-Verbose "Parameter Module are empty, populate it with all installed modules from the system..."
         $ReturnModule = foreach ($_module in $GetInstalledModules) {
-            Write-Verbose "Collecting information about module $($_module)..."
+            Write-Verbose "Collecting information about module $($_module.name)..."
             $GetAllInstalledVersions = Get-InstalledModule -Name $_module.name -AllVersions | Sort-Object { $_.Version -as [version] } -Descending
 
             # Get latest version
