@@ -15,7 +15,8 @@ Works on all OS versions.
 - Update specified modules
 - Uninstall old versions of the modules
 - If specified module are missing you can choose to install it
-- Import specified modules in the end of the script
+- Ignore SkipPublisherCheck
+- Update / install Pre-release
 
 ## Dependencies
 - Module also require that you have my service module installed, [rsServiceModule](https://github.com/rstolpe/rsServiceModule)
