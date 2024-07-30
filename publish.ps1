@@ -1,5 +1,4 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-Install-Module Microsoft.PowerShell.PSResourceGet -Scope CurrentUser -Force
 
 $CheckIfTrusted = Get-PSRepository -name PSGallery | Select-Object InstallationPolicy -ExpandProperty InstallationPolicy
 if ($CheckIfTrusted -eq "Untrusted") {
