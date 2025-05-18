@@ -1,7 +1,7 @@
 ﻿<#
     MIT License
 
-    Copyright (C) 2024 Robin Stolpe.
+    Copyright (C) 2025 Robin Widmark.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -48,11 +48,11 @@ Function Uninstall-rsModule {
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES
-        Author:         Robin Stolpe
-        Mail:           robin@stolpe.io
+        Author:         Robin Widmark
+        Mail:           robin@widmark.dev
         Twitter:        https://twitter.com/rstolpes
         Linkedin:       https://www.linkedin.com/in/rstolpe/
-        Website/Blog:   https://stolpe.io
+        Website/Blog:   https://widmark.dev
         GitHub:         https://github.com/rstolpe
         PSGallery:      https://www.powershellgallery.com/profiles/rstolpe
     #>
@@ -229,11 +229,13 @@ Function Update-rsModule {
         https://github.com/rstolpe/MaintainModule/blob/main/README.md
 
         .NOTES
-        Author:         Robin Stolpe
-        Mail:           robin@stolpe.io
-        Twitter:        https://twitter.com/rstolpes
-        Linkedin:       https://www.linkedin.com/in/rstolpe/
-        Website/Blog:   https://stolpe.io
+        Author:         Robin Widmark
+        Mail:           robin@widmark.dev
+        Website/Blog:   https://widmark.dev
+        X:              https://x.com/widmark_robin
+        Mastodon:       https://mastodon.social/@rwidmark
+        YouTube:		https://www.youtube.com/@rwidmark
+        Linkedin:       https://www.linkedin.com/in/rwidmark/
         GitHub:         https://github.com/rstolpe
         PSGallery:      https://www.powershellgallery.com/profiles/rstolpe
     #>
