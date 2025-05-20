@@ -234,10 +234,9 @@ Function Update-rsModule {
         Website/Blog:   https://widmark.dev
         X:              https://x.com/widmark_robin
         Mastodon:       https://mastodon.social/@rwidmark
-        YouTube:		https://www.youtube.com/@rwidmark
+		YouTube:		https://www.youtube.com/@rwidmark
         Linkedin:       https://www.linkedin.com/in/rwidmark/
-        GitHub:         https://github.com/rstolpe
-        PSGallery:      https://www.powershellgallery.com/profiles/rstolpe
+        GitHub:         https://github.com/rwidmark
     #>
 
     [CmdletBinding(SupportsShouldProcess)]
@@ -257,7 +256,7 @@ Function Update-rsModule {
         [bool]$AllowPrerelease = $false
     )
 
-    Write-Output "`n=== Module Maintenance - Stolpe.io 2024 ==="
+    Write-Output "`n=== Module Maintenance - Widmark.dev 2025 ==="
     Write-Output "Please wait, this can take some time...`n"
 
     # Making sure that all needed components are installed
