@@ -1,6 +1,6 @@
-![GitHub](https://img.shields.io/github/license/rstolpe/MaintainModule?style=plastic)  
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/rstolpe/MaintainModule?sort=semver&style=plastic)  ![Last release](https://img.shields.io/github/release-date/rstolpe/MaintainModule?style=plastic)
-![GitHub last commit](https://img.shields.io/github/last-commit/rstolpe/MaintainModule?style=plastic)  
+![GitHub](https://img.shields.io/github/license/rwidmark/MaintainModule?style=plastic)  
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/rwidmark/MaintainModule?sort=semver&style=plastic)  ![Last release](https://img.shields.io/github/release-date/rwidmark/MaintainModule?style=plastic)
+![GitHub last commit](https://img.shields.io/github/last-commit/rwidmark/MaintainModule?style=plastic)  
 ![PSGallery downloads](https://img.shields.io/powershellgallery/dt/MaintainModule?style=plastic)
   
 # MaintainModule
@@ -19,14 +19,16 @@ Works on all OS versions.
 - Update / install Pre-release
 
 ## Dependencies
-- Module also require that you have my service module installed, [rsServiceModule](https://github.com/rstolpe/rsServiceModule)
+- Module also require that you have my service module installed, [rsServiceModule](https://github.com/rwidmark/rsServiceModule)
 
 # Links
-* [My PowerShell Collection](https://github.com/rstolpe/PSCollection)
-* [Webpage/Blog](https://www.stolpe.io)
-* [Twitter](https://twitter.com/rstolpes)
-* [LinkedIn](https://www.linkedin.com/in/rstolpe/)
-* [PowerShell Gallery](https://www.powershellgallery.com/profiles/rstolpe)
+* [My PowerShell Collection](https://github.com/rwidmark/PSCollection)
+* [Webpage/Blog](https://widmark.dev)
+* [X](https://twitter.com/widmark_robin)
+* [Mastodon](https://mastodon.social/@rwidmark)
+* [YouTube](https://www.youtube.com/@rwidmark)
+* [LinkedIn](https://www.linkedin.com/in/rwidmark/)
+* [GitHub](https://github.com/rwidmark)
 
 
 ## Notes

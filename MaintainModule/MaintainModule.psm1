@@ -1,7 +1,7 @@
 ﻿<#
     MIT License
 
-    Copyright (C) 2024 Robin Stolpe.
+    Copyright (C) 2025 Robin Widmark.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -45,16 +45,17 @@ Function Uninstall-rsModule {
         # This will uninstall all older versions of all modules in the system
 
         .LINK
-        https://github.com/rstolpe/MaintainModule/blob/main/README.md
+        https://github.com/rwidmark/MaintainModule/blob/main/README.md
 
         .NOTES
-        Author:         Robin Stolpe
-        Mail:           robin@stolpe.io
-        Twitter:        https://twitter.com/rstolpes
-        Linkedin:       https://www.linkedin.com/in/rstolpe/
-        Website/Blog:   https://stolpe.io
-        GitHub:         https://github.com/rstolpe
-        PSGallery:      https://www.powershellgallery.com/profiles/rstolpe
+        Author:         Robin Widmark
+        Mail:           robin@widmark.dev
+        Website/Blog:   https://widmark.dev
+        X:              https://x.com/widmark_robin
+        Mastodon:       https://mastodon.social/@rwidmark
+		YouTube:		https://www.youtube.com/@rwidmark
+        Linkedin:       https://www.linkedin.com/in/rwidmark/
+        GitHub:         https://github.com/rwidmark
     #>
 
     [CmdletBinding(SupportsShouldProcess)]
@@ -62,7 +63,9 @@ Function Uninstall-rsModule {
         [Parameter(Mandatory = $false, HelpMessage = "Enter the module or modules you want to uninstall older version of, if not used all older versions will be uninstalled")]
         [string]$Module,
         [Parameter(Mandatory = $false, HelpMessage = ".")]
-        [string[]]$OldVersion
+        [string[]]$OldVersion,
+        [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
+        [bool]$AllowPrerelease = $false
     )
 
     Write-Output "START - Uninstall older versions of $($Module)"
@@ -71,7 +74,7 @@ Function Uninstall-rsModule {
     foreach ($_version in $OldVersion) {
         Write-Verbose "Uninstalling version $($_version) of $($Module)..."
         try {
-            Uninstall-Module -Name $Module -RequiredVersion $_version -Force -ErrorAction SilentlyContinue
+            Uninstall-Module -Name $Module -RequiredVersion $_version -AllowPrerelease:$AllowPrerelease -Force -ErrorAction SilentlyContinue
         }
         catch {
             Write-Error "$($PSItem.Exception)"
@@ -224,16 +227,17 @@ Function Update-rsModule {
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
 
         .LINK
-        https://github.com/rstolpe/MaintainModule/blob/main/README.md
+        https://github.com/rwidmark/MaintainModule/blob/main/README.md
 
         .NOTES
-        Author:         Robin Stolpe
-        Mail:           robin@stolpe.io
-        Twitter:        https://twitter.com/rstolpes
-        Linkedin:       https://www.linkedin.com/in/rstolpe/
-        Website/Blog:   https://stolpe.io
-        GitHub:         https://github.com/rstolpe
-        PSGallery:      https://www.powershellgallery.com/profiles/rstolpe
+        Author:         Robin Widmark
+        Mail:           robin@widmark.dev
+        Website/Blog:   https://widmark.dev
+        X:              https://x.com/widmark_robin
+        Mastodon:       https://mastodon.social/@rwidmark
+		YouTube:		https://www.youtube.com/@rwidmark
+        Linkedin:       https://www.linkedin.com/in/rwidmark/
+        GitHub:         https://github.com/rwidmark
     #>
 
     [CmdletBinding(SupportsShouldProcess)]
@@ -248,12 +252,12 @@ Function Update-rsModule {
         [Parameter(Mandatory = $false, HelpMessage = "Install all of the modules that has been entered in module that are not installed on the system")]
         [switch]$InstallMissing = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Don't check publishers certificate")]
-        [bool]$SkipPublisherCheck = $false,
+        [switch]$SkipPublisherCheck = $false,
         [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
         [bool]$AllowPrerelease = $false
     )
 
-    Write-Output "`n=== Module Maintenance - Stolpe.io 2024 ==="
+    Write-Output "`n=== Module Maintenance - Widmark.dev 2025 ==="
     Write-Output "Please wait, this can take some time...`n"
 
     # Making sure that all needed components are installed
@@ -279,13 +283,18 @@ Function Update-rsModule {
                 try {
                     Write-Output "Found a newer version of $($_module.Name), version $CollectLatestVersion"
                     Write-Output "Updating $($_module.Name) from $($_module.LatestVersion) to version $CollectLatestVersion..."
-                    Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck:$SkipPublisherCheck -AcceptLicense -Force
+                    if ($SkipPublisherCheck -eq $true) {
+                        Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck -AcceptLicense -Force
+                    }
+                    else {
+                        Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force
+                    }
                     Write-Output "$($_module.Name) has now been updated to version $($CollectLatestVersion)!"
 
                     # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
                     if ($UninstallOldVersion -eq $true -and $_module.OldVersion.Count -gt 0) {
-                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.OldVersion
-                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.LatestVersion
+                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.OldVersion -AllowPrerelease:$AllowPrerelease
+                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.LatestVersion -AllowPrerelease:$AllowPrerelease
                     }
                     else {
                         Write-Verbose "$($_module.Name) don't have any older versions to uninstall!"
@@ -307,7 +316,12 @@ Function Update-rsModule {
         if ($InstallMissing -eq $true) {
             try {
                 Write-Output "$($_module.name) are not installed, installing $($_module.name)..."
-                Install-Module -Name $_module.name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force
+                if ($SkipPublisherCheck -eq $true) {
+                    Install-Module -Name $_module.name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck -AcceptLicense -Force
+                }
+                else {
+                    Install-Module -Name $_module.name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force
+                }
                 Write-Output "$($_module.name) has now been installed!"
             }
             catch {
