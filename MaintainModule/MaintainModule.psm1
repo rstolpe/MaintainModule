@@ -45,16 +45,17 @@ Function Uninstall-rsModule {
         # This will uninstall all older versions of all modules in the system
 
         .LINK
-        https://github.com/rstolpe/MaintainModule/blob/main/README.md
+        https://github.com/rwidmark/MaintainModule/blob/main/README.md
 
         .NOTES
         Author:         Robin Widmark
         Mail:           robin@widmark.dev
-        Twitter:        https://twitter.com/rstolpes
-        Linkedin:       https://www.linkedin.com/in/rstolpe/
         Website/Blog:   https://widmark.dev
-        GitHub:         https://github.com/rstolpe
-        PSGallery:      https://www.powershellgallery.com/profiles/rstolpe
+        X:              https://x.com/widmark_robin
+        Mastodon:       https://mastodon.social/@rwidmark
+		YouTube:		https://www.youtube.com/@rwidmark
+        Linkedin:       https://www.linkedin.com/in/rwidmark/
+        GitHub:         https://github.com/rwidmark
     #>
 
     [CmdletBinding(SupportsShouldProcess)]
@@ -226,7 +227,7 @@ Function Update-rsModule {
         # This will update the modules PowerCLI and ImportExcel and delete all of the old versions that are installed of PowerCLI and ImportExcel and then import the modules.
 
         .LINK
-        https://github.com/rstolpe/MaintainModule/blob/main/README.md
+        https://github.com/rwidmark/MaintainModule/blob/main/README.md
 
         .NOTES
         Author:         Robin Widmark
