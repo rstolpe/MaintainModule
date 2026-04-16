@@ -29,9 +29,13 @@ function Get-rsModuleDetail {
         [psobject[]]$InstalledModule
     )
 
-    $sortedModuleVersions = @($InstalledModule | Sort-Object Version -Descending)
-    $latestVersion = $sortedModuleVersions[0].Version
-    $oldVersions = @($sortedModuleVersions | Where-Object { $_.Version.CompareTo($latestVersion) -ne 0 } | ForEach-Object { $_.Version })
+    $sortedModuleVersions = @(
+        $InstalledModule |
+        Select-Object *, @{ Name = 'ParsedVersion'; Expression = { [version]$_.Version } } |
+        Sort-Object ParsedVersion -Descending
+    )
+    $latestVersion = $sortedModuleVersions[0].ParsedVersion
+    $oldVersions = @($sortedModuleVersions | Where-Object { $_.ParsedVersion.CompareTo($latestVersion) -ne 0 } | ForEach-Object { $_.ParsedVersion })
 
     return [PSCustomObject]@{
         Name          = $sortedModuleVersions[0].Name
@@ -84,6 +88,7 @@ function Uninstall-rsModule {
         [Alias('Name')]
         [string[]]$Module,
         [Parameter(Mandatory = $false, HelpMessage = ".")]
+        [ValidateNotNull()]
         [version[]]$OldVersion,
         [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
         [bool]$AllowPrerelease = $false
@@ -375,13 +380,17 @@ function Update-rsModule {
                         $findModuleParameters.Repository = $_module.Repository
                     }
 
-                    $availableVersions = @(Find-Module @findModuleParameters | Sort-Object Version -Descending)
+                    $availableVersions = @(
+                        Find-Module @findModuleParameters |
+                        Select-Object *, @{ Name = 'ParsedVersion'; Expression = { [version]$_.Version } } |
+                        Sort-Object ParsedVersion -Descending
+                    )
                     if ($availableVersions.Count -eq 0) {
                         Write-Warning "No repository versions were found for $($_module.Name), skipping this module..."
                         continue
                     }
 
-                    [version]$collectLatestVersion = $availableVersions[0].Version
+                    [version]$collectLatestVersion = $availableVersions[0].ParsedVersion
                 }
                 catch {
                     Write-Error "Failed to look up the latest version of $($_module.Name). $($PSItem.Exception.Message)"
