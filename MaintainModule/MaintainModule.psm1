@@ -77,7 +77,7 @@ function Uninstall-rsModule {
         Website/Blog:   https://widmark.dev
         X:              https://x.com/widmark_robin
         Mastodon:       https://mastodon.social/@rwidmark
-YouTube:https://www.youtube.com/@rwidmark
+        YouTube:        https://www.youtube.com/@rwidmark
         Linkedin:       https://www.linkedin.com/in/rwidmark/
         GitHub:         https://github.com/rwidmark
     #>
@@ -181,7 +181,7 @@ function Get-rsInstalledModule {
             }
         }
         else {
-            Write-Verbose 'Looking so the modules exists in the system...'
+            Write-Verbose 'Looking if the modules exist in the system...'
             foreach ($moduleName in $requestedModules) {
                 if ($installedModuleMap.ContainsKey($moduleName)) {
                     Write-Verbose "$($moduleName) is installed, collecting information about it..."
@@ -196,7 +196,7 @@ function Get-rsInstalledModule {
 
         if ($returnModule.Count -eq 0) {
             $returnCode = 1
-            Write-Warning 'No modules was found...'
+            Write-Warning 'No modules were found...'
         }
 
         $moduleResult = if ($returnModule.Count -gt 0) { $returnModule.ToArray() } else { $null }
@@ -306,7 +306,7 @@ function Update-rsModule {
         Website/Blog:   https://widmark.dev
         X:              https://x.com/widmark_robin
         Mastodon:       https://mastodon.social/@rwidmark
-YouTube:https://www.youtube.com/@rwidmark
+        YouTube:        https://www.youtube.com/@rwidmark
         Linkedin:       https://www.linkedin.com/in/rwidmark/
         GitHub:         https://github.com/rwidmark
     #>
