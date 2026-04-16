@@ -267,11 +267,13 @@ function Get-rsInstalledModule {
 
             $groupedModules = [System.Collections.Generic.Dictionary[string, System.Collections.Generic.List[object]]]::new([System.StringComparer]::OrdinalIgnoreCase)
             foreach ($installedModule in $allInstalledModules) {
-                if (-not $groupedModules.ContainsKey($installedModule.Name)) {
-                    $groupedModules[$installedModule.Name] = [System.Collections.Generic.List[object]]::new()
+                $moduleList = $null
+                if (-not $groupedModules.TryGetValue($installedModule.Name, [ref]$moduleList)) {
+                    $moduleList = [System.Collections.Generic.List[object]]::new()
+                    $groupedModules[$installedModule.Name] = $moduleList
                 }
 
-                [void]$groupedModules[$installedModule.Name].Add($installedModule)
+                [void]$moduleList.Add($installedModule)
             }
 
             foreach ($moduleName in ($groupedModules.Keys | Sort-Object)) {
