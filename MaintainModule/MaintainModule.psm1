@@ -262,7 +262,7 @@ function Get-rsInstalledModule {
                 throw "Failed to collect installed modules. $($PSItem.Exception.Message)"
             }
 
-            $groupedModules = @{}
+            $groupedModules = [System.Collections.Generic.Dictionary[string, System.Collections.Generic.List[object]]]::new([System.StringComparer]::OrdinalIgnoreCase)
             foreach ($installedModule in $allInstalledModules) {
                 if (-not $groupedModules.ContainsKey($installedModule.Name)) {
                     $groupedModules[$installedModule.Name] = [System.Collections.Generic.List[object]]::new()
@@ -443,6 +443,7 @@ function Update-rsModule {
 
     begin {
         $commonParameters = Get-rsCallerPreferenceParameter
+        $requestedModules = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
         Write-Output "`n=== Module Maintenance - Widmark.dev 2025 ==="
         Write-Output "Please wait, this can take some time...`n"
@@ -453,19 +454,18 @@ function Update-rsModule {
     }
 
     process {
+        foreach ($moduleName in (Get-rsRequestedModuleName -Module $Module)) {
+            [void]$requestedModules.Add($moduleName)
+        }
     }
 
     end {
-        $modulesToProcess = Get-rsRequestedModuleName -Module $Module
-        if ($modulesToProcess.Count -eq 0) {
-            $modulesToProcess = $null
-        }
-
-        $getModuleInfo = if ($null -eq $modulesToProcess) {
-            Get-rsInstalledModule
+        $modulesToProcess = @($requestedModules)
+        $getModuleInfo = if ($modulesToProcess.Count -gt 0) {
+            Get-rsInstalledModule -Module $modulesToProcess
         }
         else {
-            Get-rsInstalledModule -Module $modulesToProcess
+            Get-rsInstalledModule
         }
 
         if ($getModuleInfo.ReturnCode -eq 0) {
