@@ -59,7 +59,7 @@ function Get-rsModuleDetail {
     }
 }
 
-function Get-rsCallerPreferenceParameters {
+function Get-rsCallerPreferenceParameter {
     [CmdletBinding()]
     param()
 
@@ -442,7 +442,7 @@ function Update-rsModule {
     )
 
     begin {
-        $commonParameters = Get-rsCallerPreferenceParameters
+        $commonParameters = Get-rsCallerPreferenceParameter
 
         Write-Output "`n=== Module Maintenance - Widmark.dev 2025 ==="
         Write-Output "Please wait, this can take some time...`n"
