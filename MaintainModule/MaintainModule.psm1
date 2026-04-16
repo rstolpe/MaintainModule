@@ -1,4 +1,4 @@
-﻿<#
+<#
     MIT License
 
     Copyright (C) 2025 Robin Widmark.
@@ -21,7 +21,31 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 #>
-Function Uninstall-rsModule {
+function Get-rsModuleDetail {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [psobject[]]$InstalledModule
+    )
+
+    $sortedModuleVersions = @(
+        $InstalledModule |
+        Select-Object *, @{ Name = 'ParsedVersion'; Expression = { [version]$_.Version } } |
+        Sort-Object ParsedVersion -Descending
+    )
+    $latestVersion = $sortedModuleVersions[0].ParsedVersion
+    $oldVersions = @($sortedModuleVersions | Where-Object { $_.ParsedVersion.CompareTo($latestVersion) -ne 0 } | ForEach-Object { $_.ParsedVersion })
+
+    return [PSCustomObject]@{
+        Name          = $sortedModuleVersions[0].Name
+        Repository    = $sortedModuleVersions[0].Repository
+        OldVersion    = $oldVersions
+        LatestVersion = $latestVersion
+    }
+}
+
+function Uninstall-rsModule {
     <#
         .SYNOPSIS
         Uninstall older versions of your modules in a easy way.
@@ -53,134 +77,189 @@ Function Uninstall-rsModule {
         Website/Blog:   https://widmark.dev
         X:              https://x.com/widmark_robin
         Mastodon:       https://mastodon.social/@rwidmark
-		YouTube:		https://www.youtube.com/@rwidmark
+        YouTube:        https://www.youtube.com/@rwidmark
         Linkedin:       https://www.linkedin.com/in/rwidmark/
         GitHub:         https://github.com/rwidmark
     #>
 
     [CmdletBinding(SupportsShouldProcess)]
-    Param(
-        [Parameter(Mandatory = $false, HelpMessage = "Enter the module or modules you want to uninstall older version of, if not used all older versions will be uninstalled")]
-        [string]$Module,
+    param(
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enter the module or modules you want to uninstall older version of, if not used all older versions will be uninstalled")]
+        [Alias('Name')]
+        [string[]]$Module,
         [Parameter(Mandatory = $false, HelpMessage = ".")]
-        [string[]]$OldVersion,
+        [ValidateNotNull()]
+        [version[]]$OldVersion,
         [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
         [bool]$AllowPrerelease = $false
     )
 
-    Write-Output "START - Uninstall older versions of $($Module)"
-    Write-Output "Please wait, this can take some time..."
+    begin {
+        $versionsToRemove = @($OldVersion | Where-Object { $null -ne $_ })
+    }
 
-    foreach ($_version in $OldVersion) {
-        Write-Verbose "Uninstalling version $($_version) of $($Module)..."
-        try {
-            Uninstall-Module -Name $Module -RequiredVersion $_version -AllowPrerelease:$AllowPrerelease -Force -ErrorAction SilentlyContinue
-        }
-        catch {
-            Write-Error "$($PSItem.Exception)"
-            continue
+    process {
+        foreach ($currentModule in @($Module)) {
+            if ([string]::IsNullOrWhiteSpace($currentModule)) {
+                continue
+            }
+
+            Write-Output "START - Uninstall older versions of $currentModule"
+            Write-Output "Please wait, this can take some time..."
+
+            foreach ($_version in $versionsToRemove) {
+                if ($PSCmdlet.ShouldProcess("$currentModule $($_version)", 'Uninstall module version')) {
+                    Write-Verbose "Uninstalling version $($_version) of $($currentModule)..."
+                    try {
+                        Uninstall-Module -Name $currentModule -RequiredVersion $_version -AllowPrerelease:$AllowPrerelease -Force -ErrorAction Stop
+                    }
+                    catch {
+                        Write-Error "Failed to uninstall version $($_version) of $($currentModule). $($PSItem.Exception.Message)"
+                        continue
+                    }
+                }
+            }
+
+            Write-Output "FINISHED - All older versions of $currentModule are now uninstalled!"
         }
     }
-    Write-Output "FINISHED - All older versions of $($Module) are now uninstalled!"
+
+    end {
+        if ($versionsToRemove.Count -eq 0) {
+            Write-Verbose 'No module versions were supplied for uninstall.'
+        }
+    }
 }
-Function Get-rsInstalledModule {
-    [CmdletBinding(SupportsShouldProcess)]
-    Param(
-        [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules that you want to update, if you don't enter any, all of the modules will be updated")]
+
+function Get-rsInstalledModule {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enter module or modules that you want to update, if you don't enter any, all of the modules will be updated")]
+        [Alias('Name')]
         [string[]]$Module
     )
 
-    $ReturnCode = 0
-    $ReturnData = [ordered]@{}
+    begin {
+        $returnCode = 0
+        $returnData = [ordered]@{}
+        $returnModule = [System.Collections.Generic.List[object]]::new()
+        $missingModule = [System.Collections.Generic.List[string]]::new()
+        $requestedModules = [System.Collections.Generic.List[string]]::new()
+    }
 
-    # Collect all installed modules from the system
-    Write-Verbose "Caching all installed modules from the system..."
-    $GetInstalledModules = Get-InstalledModule | Select-Object Name | Sort-Object -Descending
+    process {
+        foreach ($moduleName in @($Module)) {
+            if ([string]::IsNullOrWhiteSpace($moduleName)) {
+                continue
+            }
 
-    if ([string]::IsNullOrEmpty($Module)) {
-        Write-Verbose "Parameter Module are empty, populate it with all installed modules from the system..."
-        $ReturnModule = foreach ($_module in $GetInstalledModules) {
-            Write-Verbose "Collecting information about module $($_module.name)..."
-            $GetAllInstalledVersions = Get-InstalledModule -Name $_module.name -AllVersions | Sort-Object { $_.Version -as [version] } -Descending
-
-            # Get latest version
-            [version]$LatestVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
-
-            # Get get all old versions
-            [version]$OldVersions = $GetAllInstalledVersions | Where-Object { $_.Version -ne $LatestVersion } | Select-Object -ExpandProperty Version
-
-            [PSCustomObject]@{
-                Name          = $_module.Name
-                Repository    = $GetAllInstalledVersions.Repository
-                OldVersion    = $OldVersions
-                LatestVersion = $LatestVersion
+            if ($moduleName -notin $requestedModules) {
+                [void]$requestedModules.Add($moduleName)
             }
         }
     }
-    else {
-        Write-Verbose "Looking so the modules exists in the system..."
-        $ReturnModule = foreach ($_module in $Module) {
-            if ($_module -in $GetInstalledModules.name) {
-                Write-Verbose "$($_module) is installed, collecting information about it..."
-                $GetAllInstalledVersions = Get-InstalledModule -Name $_module -AllVersions | Sort-Object { $_.Version -as [version] } -Descending
 
-                # Get latest version
-                [version]$LatestVersion = $($GetAllInstalledVersions | Select-Object Version -First 1).version
+    end {
+        if ($requestedModules.Count -eq 0) {
+            try {
+                Write-Verbose 'Caching all installed modules from the system...'
+                $allInstalledModules = @(Get-InstalledModule -AllVersions -ErrorAction Stop)
+            }
+            catch {
+                throw "Failed to collect installed modules. $($PSItem.Exception.Message)"
+            }
 
-                # Get get all old versions
-                [version]$OldVersions = $GetAllInstalledVersions | Where-Object { $_.Version -ne $LatestVersion } | Select-Object -ExpandProperty Version
+            foreach ($moduleInfo in @($allInstalledModules | Group-Object Name | ForEach-Object { Get-rsModuleDetail -InstalledModule $_.Group } | Sort-Object Name)) {
+                [void]$returnModule.Add($moduleInfo)
+            }
+        }
+        else {
+            Write-Verbose 'Looking if the modules exist in the system...'
+            foreach ($moduleName in $requestedModules) {
+                try {
+                    $installedModuleVersions = @(Get-InstalledModule -Name $moduleName -AllVersions -ErrorAction Stop)
+                }
+                catch {
+                    Write-Warning "$($moduleName) is not installed, skipping this module..."
+                    [void]$missingModule.Add($moduleName)
+                    continue
+                }
 
-                [PSCustomObject]@{
-                    Name          = $_module
-                    Repository    = $GetAllInstalledVersions.Repository
-                    OldVersion    = $OldVersions
-                    LatestVersion = $LatestVersion
+                $moduleInfo = Get-rsModuleDetail -InstalledModule $installedModuleVersions
+                if ($null -ne $moduleInfo) {
+                    Write-Verbose "$($moduleName) is installed, collecting information about it..."
+                    [void]$returnModule.Add($moduleInfo)
+                }
+                else {
+                    Write-Warning "$($moduleName) is not installed, skipping this module..."
+                    [void]$missingModule.Add($moduleName)
                 }
             }
+        }
+
+        if ($returnModule.Count -eq 0) {
+            $returnCode = 1
+            if ($requestedModules.Count -gt 0) {
+                Write-Warning 'No matching installed modules were found for the requested module names...'
+            }
             else {
-                Write-Warning "$($_module) is not installed, skipping this module..."
+                Write-Warning 'No installed modules were found...'
             }
         }
-    }
 
-    if ($null -eq $ReturnModule) {
-        $ReturnCode = 1
-        Write-Warning "No modules was found..."
-        $ReturnModule = $null
-    }
+        $moduleResult = if ($returnModule.Count -gt 0) { $returnModule.ToArray() } else { $null }
+        $missingResult = if ($missingModule.Count -gt 0) { $missingModule.ToArray() } else { @() }
 
-    $ReturnData.Add("ReturnCode", $ReturnCode)
-    $ReturnData.Add("Module", $ReturnModule)
-    
-    return $ReturnData
+        $returnData.Add('ReturnCode', $returnCode)
+        $returnData.Add('Module', $moduleResult)
+        $returnData.Add('MissingModule', $missingResult)
+
+        return $returnData
+    }
 }
-Function Test-rsComponent {
+
+function Test-rsComponent {
     [CmdletBinding(SupportsShouldProcess)]
-    Param(
+    param(
 
     )
 
-    # Making sure that TLS 1.2 is used.
-    Write-Verbose "Making sure that TLS 1.2 is used..."
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    begin {
+        Write-Verbose 'Making sure that TLS 1.2 is used...'
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    }
 
-    # Checking if PSGallery are set to trusted
-    Write-Verbose "Checking if PowerShell Gallery are set to trusted..."
-    if ((Get-PSRepository -name PSGallery | Select-Object InstallationPolicy -ExpandProperty InstallationPolicy) -eq "Untrusted") {
+    process {
+        Write-Verbose 'Checking if PowerShell Gallery is set to trusted...'
+
         try {
-            Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-            Write-Output "PowerShell Gallery was not set as trusted, it's now set as trusted!"
+            $psGallery = Get-PSRepository -Name PSGallery -ErrorAction Stop
         }
         catch {
-            Write-Error "$($PSItem.Exception)"
-            continue
+            throw "Failed to read PSGallery configuration. $($PSItem.Exception.Message)"
+        }
+
+        if ($psGallery.InstallationPolicy -eq 'Untrusted') {
+            if ($PSCmdlet.ShouldProcess('PSGallery', 'Set installation policy to Trusted')) {
+                try {
+                    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
+                    Write-Output "PowerShell Gallery was not set as trusted, it's now set as trusted!"
+                }
+                catch {
+                    throw "Failed to set PSGallery as trusted. $($PSItem.Exception.Message)"
+                }
+            }
+        }
+        else {
+            Write-Verbose "PowerShell Gallery was already set to trusted, continuing!"
         }
     }
-    else {
-        Write-Verbose "PowerShell Gallery was already set to trusted, continuing!"
+
+    end {
     }
 }
-Function Update-rsModule {
+
+function Update-rsModule {
     <#
         .SYNOPSIS
         This module let you maintain your installed modules in a easy way.
@@ -235,104 +314,166 @@ Function Update-rsModule {
         Website/Blog:   https://widmark.dev
         X:              https://x.com/widmark_robin
         Mastodon:       https://mastodon.social/@rwidmark
-		YouTube:		https://www.youtube.com/@rwidmark
+        YouTube:        https://www.youtube.com/@rwidmark
         Linkedin:       https://www.linkedin.com/in/rwidmark/
         GitHub:         https://github.com/rwidmark
     #>
 
     [CmdletBinding(SupportsShouldProcess)]
-    Param(
-        [Parameter(Mandatory = $false, HelpMessage = "Enter module or modules that you want to update, if you don't enter any, all of the modules will be updated")]
+    param(
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enter module or modules that you want to update, if you don't enter any, all of the modules will be updated")]
+        [Alias('Name')]
         [string[]]$Module,
         [Parameter(Mandatory = $false, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules, default is CurrentUser")]
-        [ValidateSet("CurrentUser", "AllUsers")]
-        [string]$Scope = "CurrentUser",
-        [Parameter(Mandatory = $false, HelpMessage = "Uninstalls all old versions of the modules")]
+        [ValidateSet('CurrentUser', 'AllUsers')]
+        [string]$Scope = 'CurrentUser',
+        [Parameter(Mandatory = $false, HelpMessage = 'Uninstalls all old versions of the modules')]
         [switch]$UninstallOldVersion = $false,
-        [Parameter(Mandatory = $false, HelpMessage = "Install all of the modules that has been entered in module that are not installed on the system")]
+        [Parameter(Mandatory = $false, HelpMessage = 'Install all of the modules that has been entered in module that are not installed on the system')]
         [switch]$InstallMissing = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Don't check publishers certificate")]
         [switch]$SkipPublisherCheck = $false,
-        [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
+        [Parameter(Mandatory = $false, HelpMessage = 'If this is used updates etc. be for prerelease')]
         [bool]$AllowPrerelease = $false
     )
 
-    Write-Output "`n=== Module Maintenance - Widmark.dev 2025 ==="
-    Write-Output "Please wait, this can take some time...`n"
+    begin {
+        $requestedModules = [System.Collections.Generic.List[string]]::new()
 
-    # Making sure that all needed components are installed
-    Test-rsComponent
+        Write-Output "`n=== Module Maintenance - Widmark.dev 2025 ==="
+        Write-Output "Please wait, this can take some time...`n"
 
-    Write-Output "START - Updating modules`n"
+        Test-rsComponent
 
-    # Collect all installed modules from the system
-    $GetModuleInfo = Get-rsInstalledModule -Module $Module
+        Write-Output "START - Updating modules`n"
+    }
 
-    # Start looping trough every module that are stored in the string Module
-    if ($GetModuleInfo.ReturnCode -eq 0) {
-        foreach ($_module in $GetModuleInfo.Module) {
-            # Getting the latest installed version of the module
-            Write-Verbose "Collecting all installed version of $($_module.Name)..."
+    process {
+        foreach ($moduleName in @($Module)) {
+            if ([string]::IsNullOrWhiteSpace($moduleName)) {
+                continue
+            }
 
-            # Collects the latest version of module from the source where the module was installed from
-            Write-Verbose "Looking up the latest version of $($_module)..."
-            [version]$CollectLatestVersion = $(Find-Module -Name $_module.Name -Repository $_module.Repository -AllVersions | Sort-Object { $_.Version -as [version] } -Descending | Select-Object Version -First 1).version
+            if ($moduleName -notin $requestedModules) {
+                [void]$requestedModules.Add($moduleName)
+            }
+        }
+    }
 
-            # Looking if the version of the module are the latest version, it it's not the latest it will install the latest version.
-            if ($_module.LatestVersion -lt $CollectLatestVersion) {
+    end {
+        $modulesToProcess = if ($requestedModules.Count -gt 0) { $requestedModules.ToArray() } else { $null }
+        $getModuleInfo = Get-rsInstalledModule -Module $modulesToProcess
+
+        if ($getModuleInfo.ReturnCode -eq 0) {
+            foreach ($_module in @($getModuleInfo.Module)) {
+                Write-Verbose "Collecting all installed version of $($_module.Name)..."
+
                 try {
-                    Write-Output "Found a newer version of $($_module.Name), version $CollectLatestVersion"
-                    Write-Output "Updating $($_module.Name) from $($_module.LatestVersion) to version $CollectLatestVersion..."
-                    if ($SkipPublisherCheck -eq $true) {
-                        Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck -AcceptLicense -Force
+                    Write-Verbose "Looking up the latest version of $($_module.Name)..."
+                    $findModuleParameters = @{
+                        Name        = $_module.Name
+                        AllVersions = $true
+                        ErrorAction = 'Stop'
                     }
-                    else {
-                        Update-Module -Name $_module.Name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force
-                    }
-                    Write-Output "$($_module.Name) has now been updated to version $($CollectLatestVersion)!"
 
-                    # If switch -UninstallOldVersion has been used then the old versions will be uninstalled from the module
-                    if ($UninstallOldVersion -eq $true -and $_module.OldVersion.Count -gt 0) {
-                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.OldVersion -AllowPrerelease:$AllowPrerelease
-                        Uninstall-rsModule -Module $_module.Name -OldVersion $_module.LatestVersion -AllowPrerelease:$AllowPrerelease
+                    if (-not [string]::IsNullOrWhiteSpace($_module.Repository)) {
+                        $findModuleParameters.Repository = $_module.Repository
+                    }
+
+                    $availableVersions = @(
+                        Find-Module @findModuleParameters |
+                        Select-Object *, @{ Name = 'ParsedVersion'; Expression = { [version]$_.Version } } |
+                        Sort-Object ParsedVersion -Descending
+                    )
+                    if ($availableVersions.Count -eq 0) {
+                        Write-Warning "No repository versions were found for $($_module.Name), skipping this module..."
+                        continue
+                    }
+
+                    [version]$collectLatestVersion = $availableVersions[0].ParsedVersion
+                }
+                catch {
+                    Write-Error "Failed to look up the latest version of $($_module.Name). $($PSItem.Exception.Message)"
+                    continue
+                }
+
+                $versionsToRemove = @($_module.OldVersion)
+                $requiresUpdate = $_module.LatestVersion -lt $collectLatestVersion
+
+                if ($requiresUpdate) {
+                    Write-Output "Found a newer version of $($_module.Name), version $collectLatestVersion"
+                    Write-Output "Updating $($_module.Name) from $($_module.LatestVersion) to version $collectLatestVersion..."
+
+                    if ($PSCmdlet.ShouldProcess($_module.Name, "Update module to version $collectLatestVersion")) {
+                        try {
+                            $updateModuleParameters = @{
+                                Name              = $_module.Name
+                                Scope             = $Scope
+                                AllowPrerelease   = $AllowPrerelease
+                                AcceptLicense     = $true
+                                Force             = $true
+                                ErrorAction       = 'Stop'
+                            }
+
+                            if ($SkipPublisherCheck) {
+                                $updateModuleParameters.SkipPublisherCheck = $true
+                            }
+
+                            Update-Module @updateModuleParameters
+                            Write-Output "$($_module.Name) has now been updated to version $collectLatestVersion!"
+                            $versionsToRemove += $_module.LatestVersion
+                        }
+                        catch {
+                            Write-Error "Failed to update $($_module.Name). $($PSItem.Exception.Message)"
+                            continue
+                        }
+                    }
+                }
+                else {
+                    Write-Verbose "$($_module.Name) is already up to date!"
+                }
+
+                if ($UninstallOldVersion) {
+                    $versionsToRemove = @($versionsToRemove | Select-Object -Unique)
+                    if ($versionsToRemove.Count -gt 0) {
+                        Uninstall-rsModule -Module $_module.Name -OldVersion $versionsToRemove -AllowPrerelease:$AllowPrerelease
                     }
                     else {
                         Write-Verbose "$($_module.Name) don't have any older versions to uninstall!"
                     }
                 }
-                catch {
-                    Write-Error "$($PSItem.Exception)"
-                    continue
-                }
-            }
-            else {
-                Write-Verbose "$($_module.Name) are already up to date!"
             }
         }
-    }
-    #Install module if they want that 
-    else {
-        # If the switch InstallMissing are set to true the modules will get installed if they are missing
-        if ($InstallMissing -eq $true) {
-            try {
-                Write-Output "$($_module.name) are not installed, installing $($_module.name)..."
-                if ($SkipPublisherCheck -eq $true) {
-                    Install-Module -Name $_module.name -Scope $Scope -AllowPrerelease:$AllowPrerelease -SkipPublisherCheck -AcceptLicense -Force
-                }
-                else {
-                    Install-Module -Name $_module.name -Scope $Scope -AllowPrerelease:$AllowPrerelease -AcceptLicense -Force
-                }
-                Write-Output "$($_module.name) has now been installed!"
-            }
-            catch {
-                Write-Error "$($PSItem.Exception)"
-                continue
-            }
-        }
-        else {
-            Write-Verbose "$($_module.name) are not installed, you have not chosen to install missing modules"
-        }
-    }
 
-    Write-Output "`n=== \\\ Script Finished! /// ===`n"
+        if ($InstallMissing -and @($getModuleInfo.MissingModule).Count -gt 0) {
+            foreach ($missingModule in @($getModuleInfo.MissingModule)) {
+                Write-Output "$missingModule is not installed, installing $missingModule..."
+
+                if ($PSCmdlet.ShouldProcess($missingModule, 'Install missing module')) {
+                    try {
+                        $installModuleParameters = @{
+                            Name            = $missingModule
+                            Scope           = $Scope
+                            AllowPrerelease = $AllowPrerelease
+                            AcceptLicense   = $true
+                            Force           = $true
+                            ErrorAction     = 'Stop'
+                        }
+
+                        if ($SkipPublisherCheck) {
+                            $installModuleParameters.SkipPublisherCheck = $true
+                        }
+
+                        Install-Module @installModuleParameters
+                        Write-Output "$missingModule has now been installed!"
+                    }
+                    catch {
+                        Write-Error "Failed to install $missingModule. $($PSItem.Exception.Message)"
+                        continue
+                    }
+                }
+            }
+        }
+        Write-Output "`n=== \\\ Script Finished! /// ===`n"
+    }
 }
