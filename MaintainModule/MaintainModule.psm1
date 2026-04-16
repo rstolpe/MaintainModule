@@ -185,10 +185,16 @@ function Uninstall-rsModule {
 
     begin {
         $versionsToRemove = @($OldVersion | Where-Object { $null -ne $_ })
-        $moduleNames = Get-rsRequestedModuleList -Module $Module
+        $moduleNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     }
 
     process {
+        foreach ($currentModule in (Get-rsRequestedModuleList -Module $Module)) {
+            [void]$moduleNames.Add($currentModule)
+        }
+    }
+
+    end {
         foreach ($currentModule in $moduleNames) {
             Write-Output "START - Uninstall older versions of $currentModule"
             Write-Output "Please wait, this can take some time..."
