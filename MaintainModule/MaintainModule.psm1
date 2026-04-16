@@ -34,7 +34,12 @@ function Get-rsModuleDetail {
     $oldVersions = [System.Collections.Generic.List[version]]::new()
 
     foreach ($moduleInfo in $InstalledModule) {
-        [version]$parsedVersion = $moduleInfo.Version
+        try {
+            [version]$parsedVersion = $moduleInfo.Version
+        }
+        catch {
+            throw "Failed to parse the installed version for module '$($moduleInfo.Name)'. $($PSItem.Exception.Message)"
+        }
 
         if ($null -eq $latestVersion -or $parsedVersion -gt $latestVersion) {
             if ($null -ne $latestVersion) {
@@ -59,7 +64,7 @@ function Get-rsModuleDetail {
     }
 }
 
-function Get-rsCallerPreferenceParameter {
+function Get-rsCallerPreferenceMap {
     [CmdletBinding()]
     param()
 
@@ -77,7 +82,7 @@ function Get-rsCallerPreferenceParameter {
     return $commonParameters
 }
 
-function Get-rsRequestedModuleName {
+function Get-rsRequestedModuleList {
     [CmdletBinding()]
     param(
         [Parameter(HelpMessage = 'Enter module names to normalize and de-duplicate.')]
@@ -180,7 +185,7 @@ function Uninstall-rsModule {
 
     begin {
         $versionsToRemove = @($OldVersion | Where-Object { $null -ne $_ })
-        $moduleNames = Get-rsRequestedModuleName -Module $Module
+        $moduleNames = Get-rsRequestedModuleList -Module $Module
     }
 
     process {
@@ -276,9 +281,9 @@ function Get-rsInstalledModule {
         }
         else {
             Write-Verbose 'Looking if the modules exist in the system...'
-            foreach ($moduleName in $requestedModules) {
-                try {
-                    $installedModuleVersions = @(Get-InstalledModule -Name $moduleName -AllVersions -ErrorAction Stop)
+        foreach ($moduleName in $requestedModules) {
+            try {
+                $installedModuleVersions = @(Get-InstalledModule -Name $moduleName -AllVersions -ErrorAction Stop)
                 }
                 catch {
                     Write-Warning "$($moduleName) is not installed, skipping this module..."
@@ -440,7 +445,7 @@ function Update-rsModule {
     )
 
     begin {
-        $commonParameters = Get-rsCallerPreferenceParameter
+        $commonParameters = Get-rsCallerPreferenceMap
         $requestedModules = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
         Write-Output "`n=== Module Maintenance - Widmark.dev 2025 ==="
