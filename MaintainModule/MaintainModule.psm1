@@ -34,8 +34,8 @@ function Get-rsModuleDetail {
         return $null
     }
 
-    [version]$latestVersion = $sortedModuleVersions[0].Version
-    $oldVersions = @($sortedModuleVersions | Where-Object { $_.Version -ne $latestVersion } | ForEach-Object { [version]$_.Version })
+    $latestVersion = $sortedModuleVersions[0].Version
+    $oldVersions = @($sortedModuleVersions | Where-Object { $_.Version.CompareTo($latestVersion) -ne 0 } | ForEach-Object { $_.Version })
 
     return [PSCustomObject]@{
         Name          = $sortedModuleVersions[0].Name
@@ -94,7 +94,7 @@ function Uninstall-rsModule {
     )
 
     begin {
-        $versionsToRemove = @($OldVersion | Where-Object { $null -ne $_ })
+        $versionsToRemove = @($OldVersion | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace($_.ToString()) })
     }
 
     process {
@@ -469,12 +469,6 @@ function Update-rsModule {
                 }
             }
         }
-        elseif (-not $InstallMissing -and @($getModuleInfo.MissingModule).Count -gt 0) {
-            foreach ($missingModule in @($getModuleInfo.MissingModule)) {
-                Write-Verbose "$missingModule is not installed, you have not chosen to install missing modules"
-            }
-        }
-
         Write-Output "`n=== \\\ Script Finished! /// ===`n"
     }
 }
