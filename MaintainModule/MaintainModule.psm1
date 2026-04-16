@@ -129,8 +129,11 @@ function Get-rsLatestRepositoryModule {
         $findModuleParameters.AllowPrerelease = $true
     }
 
-    # Find-Module returns the newest matching version by default, so an AllVersions query is unnecessary here.
-    return Find-Module @findModuleParameters
+    # When no repository is specified, Find-Module can return one result per registered repository.
+    # Normalize that output to a single newest match so callers always receive one module object.
+    return Find-Module @findModuleParameters |
+        Sort-Object -Property Version -Descending |
+        Select-Object -First 1
 }
 
 function Uninstall-rsModule {
