@@ -29,7 +29,7 @@ function Get-rsModuleDetail {
         [psobject[]]$InstalledModule
     )
 
-    $sortedModuleVersions = @($InstalledModule | Sort-Object { $_.Version -as [version] } -Descending)
+    $sortedModuleVersions = @($InstalledModule | Sort-Object Version -Descending)
     if ($sortedModuleVersions.Count -eq 0) {
         return $null
     }
@@ -144,22 +144,6 @@ function Get-rsInstalledModule {
         $returnModule = [System.Collections.Generic.List[object]]::new()
         $missingModule = [System.Collections.Generic.List[string]]::new()
         $requestedModules = [System.Collections.Generic.List[string]]::new()
-        $installedModuleMap = @{}
-
-        try {
-            Write-Verbose 'Caching all installed modules from the system...'
-            $allInstalledModules = @(Get-InstalledModule -AllVersions -ErrorAction Stop)
-        }
-        catch {
-            throw "Failed to collect installed modules. $($PSItem.Exception.Message)"
-        }
-
-        foreach ($moduleGroup in ($allInstalledModules | Group-Object Name)) {
-            $moduleInfo = Get-rsModuleDetail -InstalledModule $moduleGroup.Group
-            if ($null -ne $moduleInfo) {
-                $installedModuleMap[$moduleGroup.Name] = $moduleInfo
-            }
-        }
     }
 
     process {
@@ -176,16 +160,34 @@ function Get-rsInstalledModule {
 
     end {
         if ($requestedModules.Count -eq 0) {
-            foreach ($moduleInfo in ($installedModuleMap.Values | Sort-Object Name)) {
+            try {
+                Write-Verbose 'Caching all installed modules from the system...'
+                $allInstalledModules = @(Get-InstalledModule -AllVersions -ErrorAction Stop)
+            }
+            catch {
+                throw "Failed to collect installed modules. $($PSItem.Exception.Message)"
+            }
+
+            foreach ($moduleInfo in @($allInstalledModules | Group-Object Name | ForEach-Object { Get-rsModuleDetail -InstalledModule $_.Group } | Sort-Object Name)) {
                 [void]$returnModule.Add($moduleInfo)
             }
         }
         else {
             Write-Verbose 'Looking if the modules exist in the system...'
             foreach ($moduleName in $requestedModules) {
-                if ($installedModuleMap.ContainsKey($moduleName)) {
+                try {
+                    $installedModuleVersions = @(Get-InstalledModule -Name $moduleName -AllVersions -ErrorAction Stop)
+                }
+                catch {
+                    Write-Warning "$($moduleName) is not installed, skipping this module..."
+                    [void]$missingModule.Add($moduleName)
+                    continue
+                }
+
+                $moduleInfo = Get-rsModuleDetail -InstalledModule $installedModuleVersions
+                if ($null -ne $moduleInfo) {
                     Write-Verbose "$($moduleName) is installed, collecting information about it..."
-                    [void]$returnModule.Add($installedModuleMap[$moduleName])
+                    [void]$returnModule.Add($moduleInfo)
                 }
                 else {
                     Write-Warning "$($moduleName) is not installed, skipping this module..."
@@ -222,7 +224,7 @@ function Test-rsComponent {
     }
 
     process {
-        Write-Verbose 'Checking if PowerShell Gallery are set to trusted...'
+        Write-Verbose 'Checking if PowerShell Gallery is set to trusted...'
 
         try {
             $psGallery = Get-PSRepository -Name PSGallery -ErrorAction Stop
@@ -372,7 +374,7 @@ function Update-rsModule {
                         $findModuleParameters.Repository = $_module.Repository
                     }
 
-                    $availableVersions = @(Find-Module @findModuleParameters | Sort-Object { $_.Version -as [version] } -Descending)
+                    $availableVersions = @(Find-Module @findModuleParameters | Sort-Object Version -Descending)
                     if ($availableVersions.Count -eq 0) {
                         Write-Warning "No repository versions were found for $($_module.Name), skipping this module..."
                         continue
@@ -418,11 +420,11 @@ function Update-rsModule {
                     }
                 }
                 else {
-                    Write-Verbose "$($_module.Name) are already up to date!"
+                    Write-Verbose "$($_module.Name) is already up to date!"
                 }
 
                 if ($UninstallOldVersion) {
-                    $versionsToRemove = @($versionsToRemove | Sort-Object -Unique)
+                    $versionsToRemove = @($versionsToRemove | Select-Object -Unique)
                     if ($versionsToRemove.Count -gt 0) {
                         Uninstall-rsModule -Module $_module.Name -OldVersion $versionsToRemove -AllowPrerelease:$AllowPrerelease
                     }
@@ -435,7 +437,7 @@ function Update-rsModule {
 
         if ($InstallMissing -and @($getModuleInfo.MissingModule).Count -gt 0) {
             foreach ($missingModule in @($getModuleInfo.MissingModule)) {
-                Write-Output "$missingModule are not installed, installing $missingModule..."
+                Write-Output "$missingModule is not installed, installing $missingModule..."
 
                 if ($PSCmdlet.ShouldProcess($missingModule, 'Install missing module')) {
                     try {
@@ -464,7 +466,7 @@ function Update-rsModule {
         }
         elseif (-not $InstallMissing -and @($getModuleInfo.MissingModule).Count -gt 0) {
             foreach ($missingModule in @($getModuleInfo.MissingModule)) {
-                Write-Verbose "$missingModule are not installed, you have not chosen to install missing modules"
+                Write-Verbose "$missingModule is not installed, you have not chosen to install missing modules"
             }
         }
 
