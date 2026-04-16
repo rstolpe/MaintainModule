@@ -124,6 +124,7 @@ function Get-rsLatestRepositoryModule {
         $findModuleParameters.AllowPrerelease = $true
     }
 
+    # Find-Module returns the newest matching version by default, so an AllVersions query is unnecessary here.
     return Find-Module @findModuleParameters
 }
 
@@ -240,8 +241,12 @@ function Get-rsInstalledModule {
     }
 
     process {
-        foreach ($moduleName in (Get-rsRequestedModuleName -Module $Module)) {
-            [void]$requestedModules.Add($moduleName)
+        foreach ($moduleName in $Module) {
+            if ([string]::IsNullOrWhiteSpace($moduleName)) {
+                continue
+            }
+
+            [void]$requestedModules.Add($moduleName.Trim())
         }
     }
 
@@ -447,8 +452,12 @@ function Update-rsModule {
     }
 
     process {
-        foreach ($moduleName in (Get-rsRequestedModuleName -Module $Module)) {
-            [void]$requestedModules.Add($moduleName)
+        foreach ($moduleName in $Module) {
+            if ([string]::IsNullOrWhiteSpace($moduleName)) {
+                continue
+            }
+
+            [void]$requestedModules.Add($moduleName.Trim())
         }
     }
 
