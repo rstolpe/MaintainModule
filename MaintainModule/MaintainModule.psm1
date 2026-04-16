@@ -24,25 +24,114 @@
 function Get-rsModuleDetail {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Enter installed module objects for a single module name.')]
         [ValidateNotNullOrEmpty()]
         [psobject[]]$InstalledModule
     )
 
-    $sortedModuleVersions = @(
-        $InstalledModule |
-        Select-Object *, @{ Name = 'ParsedVersion'; Expression = { [version]$_.Version } } |
-        Sort-Object ParsedVersion -Descending
-    )
-    $latestVersion = $sortedModuleVersions[0].ParsedVersion
-    $oldVersions = @($sortedModuleVersions | Where-Object { $_.ParsedVersion.CompareTo($latestVersion) -ne 0 } | ForEach-Object { $_.ParsedVersion })
+    $latestModule = $null
+    $latestVersion = $null
+    $oldVersions = [System.Collections.Generic.List[version]]::new()
+
+    foreach ($moduleInfo in $InstalledModule) {
+        [version]$parsedVersion = $moduleInfo.Version
+
+        if ($null -eq $latestVersion -or $parsedVersion -gt $latestVersion) {
+            if ($null -ne $latestVersion) {
+                [void]$oldVersions.Add($latestVersion)
+            }
+
+            $latestVersion = $parsedVersion
+            $latestModule = $moduleInfo
+            continue
+        }
+
+        if ($parsedVersion -lt $latestVersion) {
+            [void]$oldVersions.Add($parsedVersion)
+        }
+    }
 
     return [PSCustomObject]@{
-        Name          = $sortedModuleVersions[0].Name
-        Repository    = $sortedModuleVersions[0].Repository
-        OldVersion    = $oldVersions
+        Name          = $latestModule.Name
+        Repository    = $latestModule.Repository
+        OldVersion    = $oldVersions.ToArray()
         LatestVersion = $latestVersion
     }
+}
+
+function Get-rsCallerPreferenceParameters {
+    [CmdletBinding()]
+    param()
+
+    $commonParameters = @{}
+
+    # Forward caller preferences so nested commands honor -Verbose and -WhatIf consistently.
+    if ($VerbosePreference -eq [System.Management.Automation.ActionPreference]::Continue) {
+        $commonParameters.Verbose = $true
+    }
+
+    if ($WhatIfPreference) {
+        $commonParameters.WhatIf = $true
+    }
+
+    return $commonParameters
+}
+
+function Get-rsRequestedModuleName {
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = 'Enter module names to normalize and de-duplicate.')]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]]$Module
+    )
+
+    begin {
+        $requestedModules = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    }
+
+    process {
+        foreach ($moduleName in $Module) {
+            if ([string]::IsNullOrWhiteSpace($moduleName)) {
+                continue
+            }
+
+            [void]$requestedModules.Add($moduleName.Trim())
+        }
+    }
+
+    end {
+        return @($requestedModules)
+    }
+}
+
+function Get-rsLatestRepositoryModule {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, HelpMessage = 'Enter the name of the module to look up in the repository.')]
+        [ValidateNotNullOrEmpty()]
+        [string]$ModuleName,
+        [Parameter(Mandatory = $false, HelpMessage = 'Enter the repository to query when one is known.')]
+        [AllowEmptyString()]
+        [string]$Repository,
+        [Parameter(Mandatory = $false, HelpMessage = 'Include prerelease versions when querying the repository.')]
+        [switch]$AllowPrerelease
+    )
+
+    $findModuleParameters = @{
+        Name        = $ModuleName
+        ErrorAction = 'Stop'
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($Repository)) {
+        $findModuleParameters.Repository = $Repository
+    }
+
+    if ($AllowPrerelease) {
+        $findModuleParameters.AllowPrerelease = $true
+    }
+
+    return Find-Module @findModuleParameters
 }
 
 function Uninstall-rsModule {
@@ -86,24 +175,22 @@ function Uninstall-rsModule {
     param(
         [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enter the module or modules you want to uninstall older version of, if not used all older versions will be uninstalled")]
         [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [string[]]$Module,
-        [Parameter(Mandatory = $false, HelpMessage = ".")]
-        [ValidateNotNull()]
+        [Parameter(Mandatory = $false, HelpMessage = 'Enter the module versions that should be removed.')]
+        [ValidateNotNullOrEmpty()]
         [version[]]$OldVersion,
-        [Parameter(Mandatory = $false, HelpMessage = "If this is used updates etc. be for prerelease")]
-        [bool]$AllowPrerelease = $false
+        [Parameter(Mandatory = $false, HelpMessage = 'Allow prerelease versions when uninstalling a specific version.')]
+        [switch]$AllowPrerelease
     )
 
     begin {
         $versionsToRemove = @($OldVersion | Where-Object { $null -ne $_ })
+        $moduleNames = Get-rsRequestedModuleName -Module $Module
     }
 
     process {
-        foreach ($currentModule in @($Module)) {
-            if ([string]::IsNullOrWhiteSpace($currentModule)) {
-                continue
-            }
-
+        foreach ($currentModule in $moduleNames) {
             Write-Output "START - Uninstall older versions of $currentModule"
             Write-Output "Please wait, this can take some time..."
 
@@ -111,7 +198,18 @@ function Uninstall-rsModule {
                 if ($PSCmdlet.ShouldProcess("$currentModule $($_version)", 'Uninstall module version')) {
                     Write-Verbose "Uninstalling version $($_version) of $($currentModule)..."
                     try {
-                        Uninstall-Module -Name $currentModule -RequiredVersion $_version -AllowPrerelease:$AllowPrerelease -Force -ErrorAction Stop
+                        $uninstallModuleParameters = @{
+                            Name            = $currentModule
+                            RequiredVersion = $_version
+                            Force           = $true
+                            ErrorAction     = 'Stop'
+                        }
+
+                        if ($AllowPrerelease) {
+                            $uninstallModuleParameters.AllowPrerelease = $true
+                        }
+
+                        Uninstall-Module @uninstallModuleParameters
                     }
                     catch {
                         Write-Error "Failed to uninstall version $($_version) of $($currentModule). $($PSItem.Exception.Message)"
@@ -136,6 +234,7 @@ function Get-rsInstalledModule {
     param(
         [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enter module or modules that you want to update, if you don't enter any, all of the modules will be updated")]
         [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [string[]]$Module
     )
 
@@ -144,18 +243,12 @@ function Get-rsInstalledModule {
         $returnData = [ordered]@{}
         $returnModule = [System.Collections.Generic.List[object]]::new()
         $missingModule = [System.Collections.Generic.List[string]]::new()
-        $requestedModules = [System.Collections.Generic.List[string]]::new()
+        $requestedModules = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     }
 
     process {
-        foreach ($moduleName in @($Module)) {
-            if ([string]::IsNullOrWhiteSpace($moduleName)) {
-                continue
-            }
-
-            if ($moduleName -notin $requestedModules) {
-                [void]$requestedModules.Add($moduleName)
-            }
+        foreach ($moduleName in (Get-rsRequestedModuleName -Module $Module)) {
+            [void]$requestedModules.Add($moduleName)
         }
     }
 
@@ -169,7 +262,17 @@ function Get-rsInstalledModule {
                 throw "Failed to collect installed modules. $($PSItem.Exception.Message)"
             }
 
-            foreach ($moduleInfo in @($allInstalledModules | Group-Object Name | ForEach-Object { Get-rsModuleDetail -InstalledModule $_.Group } | Sort-Object Name)) {
+            $groupedModules = @{}
+            foreach ($installedModule in $allInstalledModules) {
+                if (-not $groupedModules.ContainsKey($installedModule.Name)) {
+                    $groupedModules[$installedModule.Name] = [System.Collections.Generic.List[object]]::new()
+                }
+
+                [void]$groupedModules[$installedModule.Name].Add($installedModule)
+            }
+
+            foreach ($moduleName in ($groupedModules.Keys | Sort-Object)) {
+                $moduleInfo = Get-rsModuleDetail -InstalledModule $groupedModules[$moduleName].ToArray()
                 [void]$returnModule.Add($moduleInfo)
             }
         }
@@ -323,6 +426,7 @@ function Update-rsModule {
     param(
         [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enter module or modules that you want to update, if you don't enter any, all of the modules will be updated")]
         [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [string[]]$Module,
         [Parameter(Mandatory = $false, HelpMessage = "Enter CurrentUser or AllUsers depending on what scope you want to change your modules, default is CurrentUser")]
         [ValidateSet('CurrentUser', 'AllUsers')]
@@ -333,36 +437,36 @@ function Update-rsModule {
         [switch]$InstallMissing = $false,
         [Parameter(Mandatory = $false, HelpMessage = "Don't check publishers certificate")]
         [switch]$SkipPublisherCheck = $false,
-        [Parameter(Mandatory = $false, HelpMessage = 'If this is used updates etc. be for prerelease')]
-        [bool]$AllowPrerelease = $false
+        [Parameter(Mandatory = $false, HelpMessage = 'Include prerelease versions when searching, installing, and updating modules.')]
+        [switch]$AllowPrerelease
     )
 
     begin {
-        $requestedModules = [System.Collections.Generic.List[string]]::new()
+        $commonParameters = Get-rsCallerPreferenceParameters
 
         Write-Output "`n=== Module Maintenance - Widmark.dev 2025 ==="
         Write-Output "Please wait, this can take some time...`n"
 
-        Test-rsComponent
+        Test-rsComponent @commonParameters
 
         Write-Output "START - Updating modules`n"
     }
 
     process {
-        foreach ($moduleName in @($Module)) {
-            if ([string]::IsNullOrWhiteSpace($moduleName)) {
-                continue
-            }
-
-            if ($moduleName -notin $requestedModules) {
-                [void]$requestedModules.Add($moduleName)
-            }
-        }
     }
 
     end {
-        $modulesToProcess = if ($requestedModules.Count -gt 0) { $requestedModules.ToArray() } else { $null }
-        $getModuleInfo = Get-rsInstalledModule -Module $modulesToProcess
+        $modulesToProcess = Get-rsRequestedModuleName -Module $Module
+        if ($modulesToProcess.Count -eq 0) {
+            $modulesToProcess = $null
+        }
+
+        $getModuleInfo = if ($null -eq $modulesToProcess) {
+            Get-rsInstalledModule
+        }
+        else {
+            Get-rsInstalledModule -Module $modulesToProcess
+        }
 
         if ($getModuleInfo.ReturnCode -eq 0) {
             foreach ($_module in @($getModuleInfo.Module)) {
@@ -370,27 +474,13 @@ function Update-rsModule {
 
                 try {
                     Write-Verbose "Looking up the latest version of $($_module.Name)..."
-                    $findModuleParameters = @{
-                        Name        = $_module.Name
-                        AllVersions = $true
-                        ErrorAction = 'Stop'
-                    }
-
-                    if (-not [string]::IsNullOrWhiteSpace($_module.Repository)) {
-                        $findModuleParameters.Repository = $_module.Repository
-                    }
-
-                    $availableVersions = @(
-                        Find-Module @findModuleParameters |
-                        Select-Object *, @{ Name = 'ParsedVersion'; Expression = { [version]$_.Version } } |
-                        Sort-Object ParsedVersion -Descending
-                    )
-                    if ($availableVersions.Count -eq 0) {
+                    $latestRepositoryModule = Get-rsLatestRepositoryModule -ModuleName $_module.Name -Repository $_module.Repository -AllowPrerelease:$AllowPrerelease
+                    if ($null -eq $latestRepositoryModule) {
                         Write-Warning "No repository versions were found for $($_module.Name), skipping this module..."
                         continue
                     }
 
-                    [version]$collectLatestVersion = $availableVersions[0].ParsedVersion
+                    [version]$collectLatestVersion = $latestRepositoryModule.Version
                 }
                 catch {
                     Write-Error "Failed to look up the latest version of $($_module.Name). $($PSItem.Exception.Message)"
@@ -409,10 +499,13 @@ function Update-rsModule {
                             $updateModuleParameters = @{
                                 Name              = $_module.Name
                                 Scope             = $Scope
-                                AllowPrerelease   = $AllowPrerelease
                                 AcceptLicense     = $true
                                 Force             = $true
                                 ErrorAction       = 'Stop'
+                            }
+
+                            if ($AllowPrerelease) {
+                                $updateModuleParameters.AllowPrerelease = $true
                             }
 
                             if ($SkipPublisherCheck) {
@@ -436,7 +529,7 @@ function Update-rsModule {
                 if ($UninstallOldVersion) {
                     $versionsToRemove = @($versionsToRemove | Select-Object -Unique)
                     if ($versionsToRemove.Count -gt 0) {
-                        Uninstall-rsModule -Module $_module.Name -OldVersion $versionsToRemove -AllowPrerelease:$AllowPrerelease
+                        Uninstall-rsModule -Module $_module.Name -OldVersion $versionsToRemove -AllowPrerelease:$AllowPrerelease @commonParameters
                     }
                     else {
                         Write-Verbose "$($_module.Name) don't have any older versions to uninstall!"
@@ -454,10 +547,13 @@ function Update-rsModule {
                         $installModuleParameters = @{
                             Name            = $missingModule
                             Scope           = $Scope
-                            AllowPrerelease = $AllowPrerelease
                             AcceptLicense   = $true
                             Force           = $true
                             ErrorAction     = 'Stop'
+                        }
+
+                        if ($AllowPrerelease) {
+                            $installModuleParameters.AllowPrerelease = $true
                         }
 
                         if ($SkipPublisherCheck) {
