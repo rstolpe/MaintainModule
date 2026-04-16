@@ -30,10 +30,6 @@ function Get-rsModuleDetail {
     )
 
     $sortedModuleVersions = @($InstalledModule | Sort-Object Version -Descending)
-    if ($sortedModuleVersions.Count -eq 0) {
-        return $null
-    }
-
     $latestVersion = $sortedModuleVersions[0].Version
     $oldVersions = @($sortedModuleVersions | Where-Object { $_.Version.CompareTo($latestVersion) -ne 0 } | ForEach-Object { $_.Version })
 
@@ -94,7 +90,7 @@ function Uninstall-rsModule {
     )
 
     begin {
-        $versionsToRemove = @($OldVersion | Where-Object { $null -ne $_ -and -not [string]::IsNullOrWhiteSpace($_.ToString()) })
+        $versionsToRemove = @($OldVersion | Where-Object { $null -ne $_ })
     }
 
     process {
