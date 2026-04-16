@@ -80,29 +80,22 @@ function Get-rsCallerPreferenceParameter {
 function Get-rsRequestedModuleName {
     [CmdletBinding()]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = 'Enter module names to normalize and de-duplicate.')]
+        [Parameter(HelpMessage = 'Enter module names to normalize and de-duplicate.')]
         [AllowNull()]
         [AllowEmptyCollection()]
         [string[]]$Module
     )
 
-    begin {
-        $requestedModules = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-    }
-
-    process {
-        foreach ($moduleName in $Module) {
-            if ([string]::IsNullOrWhiteSpace($moduleName)) {
-                continue
-            }
-
-            [void]$requestedModules.Add($moduleName.Trim())
+    $requestedModules = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($moduleName in $Module) {
+        if ([string]::IsNullOrWhiteSpace($moduleName)) {
+            continue
         }
+
+        [void]$requestedModules.Add($moduleName.Trim())
     }
 
-    end {
-        return @($requestedModules)
-    }
+    return @($requestedModules)
 }
 
 function Get-rsLatestRepositoryModule {
