@@ -198,7 +198,12 @@ function Get-rsInstalledModule {
 
         if ($returnModule.Count -eq 0) {
             $returnCode = 1
-            Write-Warning 'No modules were found...'
+            if ($requestedModules.Count -gt 0) {
+                Write-Warning 'No matching installed modules were found for the requested module names...'
+            }
+            else {
+                Write-Warning 'No installed modules were found...'
+            }
         }
 
         $moduleResult = if ($returnModule.Count -gt 0) { $returnModule.ToArray() } else { $null }
@@ -355,8 +360,8 @@ function Update-rsModule {
     }
 
     end {
-        $targetModules = if ($requestedModules.Count -gt 0) { $requestedModules.ToArray() } else { $null }
-        $getModuleInfo = Get-rsInstalledModule -Module $targetModules
+        $modulesToProcess = if ($requestedModules.Count -gt 0) { $requestedModules.ToArray() } else { $null }
+        $getModuleInfo = Get-rsInstalledModule -Module $modulesToProcess
 
         if ($getModuleInfo.ReturnCode -eq 0) {
             foreach ($_module in @($getModuleInfo.Module)) {
